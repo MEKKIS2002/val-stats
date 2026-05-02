@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SKOLEBOLLE — Valorant Registrering</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #FF4655;
+      --dark: #0F1923;
+      --darker: #080D12;
+      --mid: #1C2936;
+      --border: #1F3145;
+      --text: #ECE8E1;
+      --muted: #7B8FA3;
+      --accent: #FF4655;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--darker);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-x: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,70,85,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,70,85,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Glare */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -30%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255,70,85,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .server-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 4rem;
+      letter-spacing: 0.05em;
+      line-height: 0.9;
+      color: var(--text);
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* Card */
+    .card {
+      background: var(--mid);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      position: relative;
+      clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 20px;
+      width: 1px;
+      height: 20px;
+      background: var(--accent);
+      transform-origin: top right;
+      transform: rotate(-45deg) translateX(10px);
+    }
+
+    /* Steps */
+    .steps {
+      display: flex;
+      gap: 0;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+    }
+
+    .step {
+      flex: 1;
+      text-align: center;
+      opacity: 0.4;
+      transition: opacity 0.3s;
+    }
+
+    .step.active { opacity: 1; }
+
+    .step-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .step-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+
+    /* Form */
+    .field {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    input, select {
+      width: 100%;
+      background: var(--dark);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.75rem 1rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    input::placeholder {
+      color: var(--muted);
+      opacity: 0.5;
+    }
+
+    .riot-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: end;
+      gap: 0;
+    }
+
+    .riot-sep {
+      background: var(--dark);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0.5rem;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.25rem;
+      color: var(--accent);
+      text-align: center;
+    }
+
+    .hint {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+
+    .hint a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* Button */
+    .btn {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 1rem;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 0.5rem;
+    }
+
+    .btn:hover { background: #e03040; }
+    .btn:active { transform: scale(0.99); }
+    .btn:disabled { background: var(--border); cursor: not-allowed; }
+
+    /* Status */
+    .status {
+      margin-top: 1.25rem;
+      padding: 0.875rem 1rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      display: none;
+      border-left: 3px solid;
+    }
+
+    .status.success {
+      display: block;
+      background: rgba(0, 200, 100, 0.08);
+      border-color: #00c864;
+      color: #00c864;
+    }
+
+    .status.error {
+      display: block;
+      background: rgba(255, 70, 85, 0.08);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .status.loading {
+      display: block;
+      background: rgba(255,255,255,0.04);
+      border-color: var(--muted);
+      color: var(--muted);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--border);
+      text-transform: uppercase;
+    }
+
+    select option { background: var(--dark); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .container { animation: fadeIn 0.4s ease; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="server-tag">Skolebolle Discord</div>
+      <h1>VAL<span>STATS</span></h1>
+      <p class="subtitle">Registrer deg for ukentlig Valorant-rangering på serveren</p>
+    </div>
+
+    <div class="card">
+      <div class="steps">
+        <div class="step active">
+          <div class="step-num">01</div>
+          <div class="step-label">Discord ID</div>
+        </div>
+        <div class="step active">
+          <div class="step-num">02</div>
+          <div class="step-label">Riot ID</div>
+        </div>
+        <div class="step active">
+          <div class="step-num">03</div>
+          <div class="step-label">Region</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Din Discord User ID</label>
+        <input type="text" id="discordId" placeholder="270587211907334146">
+        <p class="hint">
+          Aktiver Developer Mode i Discord (Innstillinger → Avansert), høyreklikk på deg selv → <strong>Copy User ID</strong>
+        </p>
+      </div>
+
+      <div class="field">
+        <label>Riot ID</label>
+        <div class="riot-row">
+          <input type="text" id="riotName" placeholder="SpillerNavn">
+          <div class="riot-sep">#</div>
+          <input type="text" id="riotTag" placeholder="TAG">
+        </div>
+        <p class="hint">Samme som i Valorant-klienten, f.eks. Salaby#2002</p>
+      </div>
+
+      <div class="field">
+        <label>Region</label>
+        <select id="region">
+          <option value="eu">Europa (EU)</option>
+          <option value="na">Nord-Amerika (NA)</option>
+          <option value="ap">Asia-Stillehavet (AP)</option>
+          <option value="kr">Korea (KR)</option>
+        </select>
+      </div>
+
+      <button class="btn" onclick="register()">REGISTRER MEG</button>
+
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="footer">SKOLEBOLLE · Valorant Stats · Oppdateres hver mandag</div>
+  </div>
+
+  <script>
+    const WORKER_URL = 'https://val-stats-worker.marcus-aas-mekiassen.workers.dev';
+
+    async function register() {
+      const discordId = document.getElementById('discordId').value.trim();
+      const riotName  = document.getElementById('riotName').value.trim();
+      const riotTag   = document.getElementById('riotTag').value.trim();
+      const region    = document.getElementById('region').value;
+      const status    = document.getElementById('status');
+      const btn       = document.querySelector('.btn');
+
+      if (!discordId || !riotName || !riotTag) {
+        setStatus('error', 'Fyll inn alle feltene.');
+        return;
+      }
+
+      if (!/^\d{17,19}$/.test(discordId)) {
+        setStatus('error', 'Discord ID ser ikke riktig ut — skal være 17-19 siffer.');
+        return;
+      }
+
+      btn.disabled = true;
+      setStatus('loading', 'Registrerer...');
+
+      try {
+        const url = `${WORKER_URL}/register?discord=${encodeURIComponent(discordId)}&riot=${encodeURIComponent(riotName)}&tag=${encodeURIComponent(riotTag)}&region=${region}`;
+        const res = await fetch(url);
+        const text = await res.text();
+
+        if (res.ok) {
+          setStatus('success', `Du er registrert! ${riotName}#${riotTag} dukker opp i rangeringen neste mandag.`);
+        } else {
+          setStatus('error', `Feil: ${text}`);
+        }
+      } catch (err) {
+        setStatus('error', 'Nettverksfeil — prøv igjen.');
+      }
+
+      btn.disabled = false;
+    }
+
+    function setStatus(type, msg) {
+      const el = document.getElementById('status');
+      el.className = `status ${type}`;
+      el.textContent = msg;
+    }
+
+    // Enter-tast
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') register();
+    });
+  </script>
+</body>
+</html>
