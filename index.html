@@ -326,6 +326,105 @@
       text-transform: uppercase;
       grid-column: 1 / -1;
     }
+
+
+    /* Admin */
+    .admin-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 30;
+      width: auto;
+      margin: 0;
+      padding: 0.55rem 0.8rem;
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      border: 1px solid rgba(196, 122, 43, 0.35);
+      background: rgba(61, 31, 13, 0.82);
+      backdrop-filter: blur(10px);
+    }
+
+    .admin-panel {
+      position: fixed;
+      top: 3.8rem;
+      right: 1rem;
+      z-index: 35;
+      width: min(360px, calc(100vw - 2rem));
+      display: none;
+      background: rgba(61, 31, 13, 0.94);
+      border: 1px solid rgba(196, 122, 43, 0.35);
+      backdrop-filter: blur(14px);
+      padding: 1rem;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+    }
+
+    .admin-panel.open { display: block; }
+
+    .admin-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.35rem;
+      letter-spacing: 0.08em;
+      color: var(--cream);
+      margin-bottom: 0.75rem;
+    }
+
+    .admin-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .admin-actions .btn { margin-top: 0; padding: 0.7rem; font-size: 0.82rem; }
+
+    .admin-list {
+      max-height: 320px;
+      overflow: auto;
+      margin-top: 0.85rem;
+      border-top: 1px solid rgba(196,122,43,0.18);
+    }
+
+    .admin-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(196,122,43,0.12);
+    }
+
+    .admin-player-name {
+      color: var(--cream);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .admin-player-id {
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.58rem;
+      margin-top: 0.2rem;
+      word-break: break-all;
+    }
+
+    .delete-btn {
+      background: rgba(255,70,85,0.12);
+      color: #ff9aa2;
+      border: 1px solid rgba(255,70,85,0.35);
+      padding: 0.45rem 0.65rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      cursor: pointer;
+    }
+
+    .delete-btn:hover { background: rgba(255,70,85,0.22); }
+
+    .admin-note {
+      color: var(--muted);
+      font-size: 0.66rem;
+      line-height: 1.45;
+      margin-top: 0.7rem;
+    }
   </style>
 </head>
 <body>
@@ -364,6 +463,33 @@
   </div>
 
   <div class="glow"></div>
+
+  <button class="btn admin-toggle" onclick="toggleAdmin()">🔐 ADMIN</button>
+
+  <div class="admin-panel" id="adminPanel">
+    <div class="admin-title">Admin</div>
+
+    <div id="adminLogin">
+      <div class="field">
+        <label>Passord</label>
+        <input type="password" id="adminPassword" placeholder="Skriv inn passord">
+      </div>
+      <button class="btn" onclick="adminLogin()">Logg inn</button>
+      <div class="status" id="adminStatus"></div>
+    </div>
+
+    <div id="adminContent" style="display:none;">
+      <div class="admin-actions">
+        <button class="btn" onclick="loadAdminPlayers()">Oppdater liste</button>
+        <button class="btn" onclick="adminLogout()">Logg ut</button>
+      </div>
+      <p class="admin-note">Sletting fjerner spilleren fra registreringslisten. Discord-scoreboardet oppdateres automatisk neste gang workeren kjører, eller når du kjører /trigger.</p>
+      <div class="admin-list" id="adminPlayers">
+        <div class="sb-loading">🍩 Laster spillere...</div>
+      </div>
+      <div class="status" id="adminActionStatus"></div>
+    </div>
+  </div>
 
   <div class="layout">
 
@@ -424,6 +550,7 @@
 
   <script>
     const WORKER_URL = 'https://val-stats-worker.marcus-aas-mekiassen.workers.dev';
+    const ADMIN_PASSWORD = 'Fuksa6Svaga36';
     const MEDALS = ['🥇', '🥈', '🥉'];
     const RANK_EMOJIS = {
       'Iron': '🩶', 'Bronze': '🤎', 'Silver': '🩶', 'Gold': '🥇',
@@ -431,6 +558,126 @@
       'Immortal': '🔴', 'Radiant': '✨', 'Unranked': '⬜',
     };
     const TOP_CLASSES = ['top1', 'top2', 'top3'];
+
+
+    // ── Admin ─────────────────────────────────────────────
+    function toggleAdmin() {
+      document.getElementById('adminPanel').classList.toggle('open');
+    }
+
+    function adminLogin() {
+      const password = document.getElementById('adminPassword').value;
+      if (password !== ADMIN_PASSWORD) {
+        setAdminStatus('error', '❌ Feil passord.');
+        return;
+      }
+
+      sessionStorage.setItem('valStatsAdmin', 'true');
+      document.getElementById('adminLogin').style.display = 'none';
+      document.getElementById('adminContent').style.display = 'block';
+      setAdminStatus('success', '✅ Du er logget inn.');
+      loadAdminPlayers();
+    }
+
+    function adminLogout() {
+      sessionStorage.removeItem('valStatsAdmin');
+      document.getElementById('adminPassword').value = '';
+      document.getElementById('adminLogin').style.display = 'block';
+      document.getElementById('adminContent').style.display = 'none';
+      document.getElementById('adminPlayers').innerHTML = '<div class="sb-loading">🍩 Laster spillere...</div>';
+      setAdminActionStatus('', '');
+      setAdminStatus('success', 'Du er logget ut.');
+    }
+
+    function restoreAdminSession() {
+      if (sessionStorage.getItem('valStatsAdmin') === 'true') {
+        document.getElementById('adminLogin').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+        loadAdminPlayers();
+      }
+    }
+
+    function setAdminStatus(type, msg) {
+      const el = document.getElementById('adminStatus');
+      el.className = msg ? `status ${type}` : 'status';
+      el.textContent = msg;
+    }
+
+    function setAdminActionStatus(type, msg) {
+      const el = document.getElementById('adminActionStatus');
+      el.className = msg ? `status ${type}` : 'status';
+      el.textContent = msg;
+    }
+
+    async function loadAdminPlayers() {
+      const el = document.getElementById('adminPlayers');
+      el.innerHTML = '<div class="sb-loading">🍩 Laster spillere...</div>';
+      setAdminActionStatus('', '');
+
+      try {
+        const res = await fetch(`${WORKER_URL}/spillere`);
+        const text = await res.text();
+
+        if (!res.ok) throw new Error(text || 'Kunne ikke hente spillere.');
+        if (text.includes('Ingen spillere registrert')) {
+          el.innerHTML = '<div class="sb-loading">Ingen spillere registrert ennå.</div>';
+          return;
+        }
+
+        const players = text.trim().split('\n').map(line => {
+          const match = line.match(/^(\d+)\s+—\s+(.+)$/);
+          return match ? { discordId: match[1], label: match[2] } : null;
+        }).filter(Boolean);
+
+        if (!players.length) {
+          el.innerHTML = '<div class="sb-loading">Fant ingen spillere.</div>';
+          return;
+        }
+
+        el.innerHTML = players.map(player => `
+          <div class="admin-row">
+            <div>
+              <div class="admin-player-name">${escapeHtml(player.label)}</div>
+              <div class="admin-player-id">Discord ID: ${escapeHtml(player.discordId)}</div>
+            </div>
+            <button class="delete-btn" data-discord-id="${escapeAttr(player.discordId)}" data-label="${escapeAttr(player.label)}" onclick="deletePlayer(this.dataset.discordId, this.dataset.label)">Slett</button>
+          </div>
+        `).join('');
+      } catch (err) {
+        el.innerHTML = '<div class="sb-loading">Kunne ikke laste spillere.</div>';
+        setAdminActionStatus('error', `❌ ${err.message}`);
+      }
+    }
+
+    async function deletePlayer(discordId, label) {
+      if (!confirm(`Slette ${label}?`)) return;
+      setAdminActionStatus('loading', '🍩 Sletter spiller...');
+
+      try {
+        const res = await fetch(`${WORKER_URL}/slett?discord=${encodeURIComponent(discordId)}`);
+        const text = await res.text();
+        if (!res.ok) throw new Error(text || 'Kunne ikke slette spiller.');
+
+        setAdminActionStatus('success', `✅ ${text}`);
+        await loadAdminPlayers();
+        await loadScoreboard();
+      } catch (err) {
+        setAdminActionStatus('error', `❌ ${err.message}`);
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value).replaceAll('`', '&#096;');
+    }
 
     // ── Register ──────────────────────────────────────────
     async function register() {
@@ -512,7 +759,13 @@
       }
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (document.activeElement?.id === 'adminPassword') adminLogin();
+        else register();
+      }
+    });
+    restoreAdminSession();
     loadScoreboard();
   </script>
 </body>
