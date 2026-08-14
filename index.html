@@ -848,6 +848,106 @@
     });
     restoreAdminSession();
     loadScoreboard();
+    loadKrigHistorikk();
+
+    const BOLLEKRIG_URL = 'https://bollekrig-worker.marcus-aas-mekiassen.workers.dev';
+
+    const BOLLE_EMOJIS_KRIG = {
+      'Sjokoladebolle': '🍫', 'Bitcoinbolle': '🪙', 'Kanelbolle': '🥐',
+      'Berlinerbolle': '🍩', 'Vaniljebolle': '🤍', 'Tangzhongbolle': '🍞',
+      'Hvetebolle': '🌾', 'Ufobolle': '🛸',
+    };
+
+    async function loadKrigHistorikk() {
+      await Promise.all([loadKrigListe(), loadBolleStats(), loadMvpStats()]);
+    }
+
+    async function loadKrigListe() {
+      const el = document.getElementById('krig-liste');
+      try {
+        const res  = await fetch(`${BOLLEKRIG_URL}/resultater`);
+        const data = await res.json();
+        if (!data.length) { el.textContent = 'Ingen krigsresultater ennå.'; return; }
+        const sorted = [...data].reverse();
+        el.innerHTML = `<table style="width:100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 0.72rem;">
+          <thead>
+            <tr style="color: var(--caramel); text-align: left; border-bottom: 1px solid rgba(196,122,43,0.2);">
+              <th style="padding: 0.4rem 0.5rem;">#</th>
+              <th style="padding: 0.4rem 0.5rem;">Lag 1</th>
+              <th style="padding: 0.4rem 0.5rem;">Lag 2</th>
+              <th style="padding: 0.4rem 0.5rem;">Resultat</th>
+              <th style="padding: 0.4rem 0.5rem;">MVP</th>
+              <th style="padding: 0.4rem 0.5rem;">Dato</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map(r => {
+              const e1 = BOLLE_EMOJIS_KRIG[r.lag1] || '🍩';
+              const e2 = BOLLE_EMOJIS_KRIG[r.lag2] || '🍩';
+              const dato = new Date(r.dato).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' });
+              const resultat = r.uavgjort
+                ? `<span style="color:var(--muted)">Uavgjort</span>`
+                : r.vinner === r.lag1
+                  ? `<span style="color:#5cb85c">${e1} ${r.lag1} vant</span>`
+                  : `<span style="color:#5cb85c">${e2} ${r.lag2} vant</span>`;
+              return `<tr style="border-bottom: 1px solid rgba(196,122,43,0.08);">
+                <td style="padding: 0.4rem 0.5rem; color: var(--caramel);">${r.krigNr || '—'}</td>
+                <td style="padding: 0.4rem 0.5rem; color: var(--cream);">${e1} ${r.lag1} <span style="color:var(--muted)">(${r.score1}p)</span></td>
+                <td style="padding: 0.4rem 0.5rem; color: var(--cream);">${e2} ${r.lag2} <span style="color:var(--muted)">(${r.score2}p)</span></td>
+                <td style="padding: 0.4rem 0.5rem;">${resultat}</td>
+                <td style="padding: 0.4rem 0.5rem; color: var(--cream);">${r.mvp ? `⭐ ${r.mvp.navn}` : '—'}</td>
+                <td style="padding: 0.4rem 0.5rem; color: var(--muted);">${dato}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`;
+      } catch(e) { el.textContent = 'Kunne ikke laste resultater: ' + e.message; }
+    }
+
+    async function loadBolleStats() {
+      const seierEl = document.getElementById('bolle-seiere');
+      const tapEl   = document.getElementById('bolle-tap');
+      try {
+        const res  = await fetch(`${BOLLEKRIG_URL}/resultater`);
+        const data = await res.json();
+        const seiere = {}, tap = {};
+        for (const r of data) {
+          if (r.vinner)  seiere[r.vinner]  = (seiere[r.vinner]  || 0) + 1;
+          if (r.tapsere) tap[r.tapsere]    = (tap[r.tapsere]    || 0) + 1;
+        }
+        const seierListe = Object.entries(seiere).sort((a, b) => b[1] - a[1]);
+        const tapListe   = Object.entries(tap).sort((a, b) => b[1] - a[1]);
+        const medals = ['🥇','🥈','🥉'];
+        seierEl.innerHTML = seierListe.length
+          ? seierListe.map(([navn, antall], i) =>
+              `<div style="margin-bottom:0.4rem;">${medals[i] || (i+1+'.')} ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--cream)">${navn}</strong> — ${antall} ${antall===1?'seier':'seiere'}</div>`
+            ).join('')
+          : 'Ingen seiere ennå.';
+        tapEl.innerHTML = tapListe.length
+          ? tapListe.map(([navn, antall]) =>
+              `<div style="margin-bottom:0.4rem;">💀 ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--cream)">${navn}</strong> — ${antall} tap</div>`
+            ).join('')
+          : 'Ingen tap ennå.';
+      } catch(e) {
+        seierEl.textContent = 'Feil: ' + e.message;
+        tapEl.textContent = 'Feil: ' + e.message;
+      }
+    }
+
+    async function loadMvpStats() {
+      const el = document.getElementById('mvp-stats');
+      try {
+        const res  = await fetch(`${BOLLEKRIG_URL}/mvp-stats`);
+        const data = await res.json();
+        const sortert = Object.entries(data).sort((a, b) => b[1] - a[1]);
+        const medals = ['🥇','🥈','🥉'];
+        el.innerHTML = sortert.length
+          ? sortert.map(([navn, antall], i) =>
+              `<div style="margin-bottom:0.4rem;">${medals[i]||(i+1+'.')} <strong style="color:var(--cream)">${navn}</strong> — ⭐ ${antall} ${antall===1?'gang':'ganger'}</div>`
+            ).join('')
+          : 'Ingen MVP-data ennå.';
+      } catch(e) { el.textContent = 'Feil: ' + e.message; }
+    }
   </script>
 </body>
 </html>
