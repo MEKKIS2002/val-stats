@@ -591,40 +591,94 @@
     <div style="grid-column: 1 / -1;">
       <div class="section-tag">⚔️ Bollekrigen</div>
       <div class="section-title" id="poengsystem">POENG<em>SYSTEM</em></div>
-      <p class="section-sub">Slik beregnes poengsummen i bollekrigene</p>
+      <p class="section-sub">Slik beregnes poengsummen i bollekrigene — alle spillere bidrar, men det er laget som vinner</p>
 
-      <div class="card" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+      <div class="card" style="display: flex; flex-direction: column; gap: 2rem;">
 
+        <!-- Steg 1: Grunnscore -->
         <div>
-          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">📊 Grunnscore (0–100p)</div>
-          <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.8;">
-            <div style="margin-bottom: 0.4rem;">🎯 <strong>60%</strong> K/D (maks 2.0)</div>
-            <div style="margin-bottom: 0.4rem;">🏆 <strong>40%</strong> Winrate</div>
-            <div style="margin-top: 0.75rem; font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); background: rgba(0,0,0,0.2); padding: 0.5rem 0.75rem; border-left: 2px solid var(--caramel);">
-              Score = (K/D ÷ 2) × 60 + WR × 40<br>
-              Maks K/D som teller: 2.0
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 1rem;">Steg 1 — 📊 Grunnscore per spiller (0–100p)</div>
+          <div style="font-size: 0.84rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.7;">
+            Hver spiller får en individuell score basert på prestasjonene sine i competitive-kamper spilt <strong style="color:var(--cream)">i krig-perioden</strong>. Scoren kombinerer to ting:
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+            <div style="background: rgba(0,0,0,0.2); border-left: 3px solid #378ADD; padding: 0.875rem 1rem;">
+              <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #378ADD; letter-spacing: 0.1em; margin-bottom: 0.4rem;">K/D — 60% av scoren</div>
+              <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.6;">Drap delt på død. En K/D på 2.0 eller høyere gir full pott på denne delen. En K/D på 1.0 gir 30p, og 0 gir 0p.</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.2); border-left: 3px solid #5cb85c; padding: 0.875rem 1rem;">
+              <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #5cb85c; letter-spacing: 0.1em; margin-bottom: 0.4rem;">Winrate — 40% av scoren</div>
+              <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.6;">Andelen kamper du vinner. 100% winrate gir 40p på denne delen. 50% gir 20p.</div>
+            </div>
+          </div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: rgba(0,0,0,0.25); padding: 0.75rem 1rem; border-left: 2px solid var(--caramel); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <span>📐 Formel:</span>
+            <span style="color: var(--cream);">Score = (K/D ÷ 2) × 60 &nbsp;+&nbsp; WR% × 40</span>
+            <span style="color: rgba(156,122,90,0.6);">·</span>
+            <span>Maks K/D som teller: 2.0</span>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid rgba(196,122,43,0.15);"></div>
+
+        <!-- Steg 2: Bonus -->
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 1rem;">Steg 2 — 🔥 Bonuspoeng per lag</div>
+          <div style="font-size: 0.84rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.7;">
+            Spesielt imponerende resultater gir <strong style="color:#5cb85c">bonuspoeng</strong> til hele laget, mens pinlige tap og uavgjorte kamper gir <strong style="color:#ff8a93">straffepoeng</strong>. Disse legges til lagets totale score.
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;">
+            <div style="background: rgba(92,184,92,0.1); border: 1px solid rgba(92,184,92,0.3); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+              <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #5cb85c;">+3p</div>
+              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Seier<br>13–0</div>
+              <div style="font-size: 0.65rem; color: rgba(92,184,92,0.6); margin-top: 0.3rem;">Perfekt runde</div>
+            </div>
+            <div style="background: rgba(92,184,92,0.07); border: 1px solid rgba(92,184,92,0.2); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+              <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #5cb85c;">+2p</div>
+              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Seier<br>13–1</div>
+              <div style="font-size: 0.65rem; color: rgba(92,184,92,0.6); margin-top: 0.3rem;">Nesten perfekt</div>
+            </div>
+            <div style="background: rgba(255,138,147,0.07); border: 1px solid rgba(255,138,147,0.2); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+              <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #ff8a93;">−1p</div>
+              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Uavgjort</div>
+              <div style="font-size: 0.65rem; color: rgba(255,138,147,0.6); margin-top: 0.3rem;">Kjem ingen vei</div>
+            </div>
+            <div style="background: rgba(255,138,147,0.07); border: 1px solid rgba(255,138,147,0.2); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+              <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #ff8a93;">−2p</div>
+              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Tap<br>1–13</div>
+              <div style="font-size: 0.65rem; color: rgba(255,138,147,0.6); margin-top: 0.3rem;">Pinlig</div>
+            </div>
+            <div style="background: rgba(255,138,147,0.1); border: 1px solid rgba(255,138,147,0.3); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+              <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #ff8a93;">−3p</div>
+              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Tap<br>0–13</div>
+              <div style="font-size: 0.65rem; color: rgba(255,138,147,0.6); margin-top: 0.3rem;">Skam dere</div>
             </div>
           </div>
         </div>
 
-        <div>
-          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">🔥 Bonuspoeng</div>
-          <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.8;">
-            <div style="color: #5cb85c; margin-bottom: 0.3rem;">+3p &nbsp;Seier 13–0</div>
-            <div style="color: #5cb85c; margin-bottom: 0.3rem;">+2p &nbsp;Seier 13–1</div>
-            <div style="color: #ff8a93; margin-bottom: 0.3rem;">−3p &nbsp;Tap 0–13</div>
-            <div style="color: #ff8a93; margin-bottom: 0.3rem;">−2p &nbsp;Tap 1–13</div>
-            <div style="color: #ff8a93;">−1p &nbsp;Uavgjort</div>
-          </div>
-        </div>
+        <div style="border-top: 1px solid rgba(196,122,43,0.15);"></div>
 
+        <!-- Steg 3: Lagscore -->
         <div>
-          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">⚖️ Lagscore</div>
-          <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.8;">
-            <div style="margin-bottom: 0.5rem;">Snittet av alle aktive spillere på laget — kun de som har spilt minst 1 kamp i perioden teller.</div>
-            <div style="margin-bottom: 0.5rem;">Et lag med 2 aktive spillere kan slå et lag med 8.</div>
-            <div style="font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); background: rgba(0,0,0,0.2); padding: 0.5rem 0.75rem; border-left: 2px solid var(--caramel);">
-              Total = Lagsnitt + Bonus
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 1rem;">Steg 3 — ⚖️ Lagscore og vinner</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="font-size: 0.84rem; color: var(--muted); line-height: 1.8;">
+              <p style="margin-bottom: 0.75rem;">Lagets grunnscore er <strong style="color:var(--cream)">gjennomsnittet</strong> av alle spillere som har spilt minst én kamp i perioden. Spillere som ikke har spilt teller ikke — de verken hjelper eller skader laget.</p>
+              <p style="margin-bottom: 0.75rem;">Dette betyr at <strong style="color:var(--cream)">et lite lag kan slå et stort lag</strong> — to spillere som presterer godt slår åtte spillere som er middelmådige.</p>
+              <p>Bonuspoengene fra steg 2 legges til sist.</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <div style="font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: rgba(0,0,0,0.25); padding: 0.75rem 1rem; border-left: 2px solid var(--caramel);">
+                <div style="color: var(--cream); margin-bottom: 0.4rem;">Grunnscore</div>
+                Σ (spillerscorer) ÷ antall aktive spillere
+              </div>
+              <div style="font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: rgba(0,0,0,0.25); padding: 0.75rem 1rem; border-left: 2px solid #FFD700;">
+                <div style="color: #FFD700; margin-bottom: 0.4rem;">Total lagscore</div>
+                Lagsnitt + Bonuspoeng
+              </div>
+              <div style="font-size: 0.78rem; color: var(--muted); background: rgba(255,70,85,0.06); border: 1px solid rgba(255,70,85,0.2); padding: 0.75rem 1rem;">
+                🏆 <strong style="color:var(--cream)">Laget med høyest total vinner krigen.</strong>
+              </div>
             </div>
           </div>
         </div>
