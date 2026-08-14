@@ -493,6 +493,67 @@
 
   <div class="layout">
 
+    <!-- Pågående krig / Neste krig -->
+    <div style="grid-column: 1 / -1;">
+      <div id="krig-status-seksjon">
+        <div class="section-tag">⚔️ Bollekrigen</div>
+        <div class="section-title" id="krig-status-tittel">LASTER<em>...</em></div>
+        <p class="section-sub" id="krig-status-sub"></p>
+        <div class="card" id="krig-status-kort" style="min-height: 80px; display: flex; align-items: center; justify-content: center;">
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted);">🍩 Henter krigsstatus...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Roller forklaring -->
+    <div style="grid-column: 1 / -1;">
+      <div class="section-tag">🏅 Månedlige roller</div>
+      <div class="section-title">MÅNEDENS <em>ROLLER</em></div>
+      <p class="section-sub">Deles ut 1. hver måned basert på Valorant-stats fra forrige måned</p>
+
+      <div class="card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.875rem;">✨ Månedens Skoleboller</div>
+          <div style="font-size: 0.84rem; color: var(--muted); line-height: 1.8; margin-bottom: 1rem;">
+            De <strong style="color: var(--cream);">3 spillerne med høyest K/D</strong> den forrige måneden får rollen Månedens Skolebolle. De vises med en spesiell farge på serveren og æres i månedsmeldingen.
+          </div>
+          <div style="background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.2); padding: 0.75rem 1rem;">
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: #FFD700; letter-spacing: 0.1em; margin-bottom: 0.5rem;">KRAV</div>
+            <div style="font-size: 0.78rem; color: var(--muted); line-height: 1.7;">
+              ✅ Registrert i scoreboard-systemet<br>
+              ✅ Spilt minst 1 competitive-kamp siste 30 dager<br>
+              ✅ Blant de 3 med høyest K/D
+            </div>
+          </div>
+          <div style="margin-top: 0.75rem;">
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--caramel); letter-spacing: 0.1em; margin-bottom: 0.5rem;">NÅværende innehavere</div>
+            <div id="mvp-rolle-innehavere" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.875rem;">🗑️ Råtne Boller</div>
+          <div style="font-size: 0.84rem; color: var(--muted); line-height: 1.8; margin-bottom: 1rem;">
+            De <strong style="color: var(--cream);">3 spillerne med lavest K/D</strong> den forrige måneden får rollen Råtne Boller. En stille påminnelse om at det er rom for forbedring.
+          </div>
+          <div style="background: rgba(255,70,85,0.05); border: 1px solid rgba(255,70,85,0.15); padding: 0.75rem 1rem;">
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: #ff8a93; letter-spacing: 0.1em; margin-bottom: 0.5rem;">KRAV (for å unngå)</div>
+            <div style="font-size: 0.78rem; color: var(--muted); line-height: 1.7;">
+              ⚠️ Registrert i scoreboard-systemet<br>
+              ⚠️ Spilt minst 1 competitive-kamp siste 30 dager<br>
+              ⚠️ Blant de 3 med lavest K/D
+            </div>
+          </div>
+          <div style="margin-top: 0.75rem;">
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--caramel); letter-spacing: 0.1em; margin-bottom: 0.5rem;">Nåværende innehavere</div>
+            <div id="rotten-rolle-innehavere" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- Bollekrig historikk -->
     <div style="grid-column: 1 / -1; margin-bottom: 1rem;">
       <div class="section-tag">⚔️ Bollekrigen</div>
@@ -1020,6 +1081,125 @@
     }
 
     loadKrigHistorikk();
+    loadKrigStatus();
+    loadRolleInnehavere();
+
+    // ── Krig status ───────────────────────────────────────
+    async function loadKrigStatus() {
+      const tittelEl = document.getElementById('krig-status-tittel');
+      const subEl    = document.getElementById('krig-status-sub');
+      const kortEl   = document.getElementById('krig-status-kort');
+
+      try {
+        const res    = await fetch(`${BOLLEKRIG_URL}/status`);
+        const status = await res.json();
+
+        if (status.erKrigDag && status.kamp) {
+          const kamp = status.kamp;
+          const e1   = BOLLE_EMOJIS_KRIG[kamp.lag1] || '🍩';
+          const e2   = BOLLE_EMOJIS_KRIG[kamp.lag2] || '🍩';
+          const dager = status.dagerIgjenAvKrig;
+
+          tittelEl.innerHTML = `BOLLEKRIGEN <em>#${status.krigNr}</em>`;
+          subEl.textContent  = `Pågående krig — ${dager} ${dager === 1 ? 'dag' : 'dager'} igjen`;
+
+          // Hent scoreboard for foreløpige scores
+          const sbRes  = await fetch(`${BOLLEKRIG_URL.replace('bollekrig-worker', 'val-stats-worker')}/scoreboard`);
+          const sbData = sbRes.ok ? await sbRes.json() : [];
+
+          // Beregn snitt per lag
+          function lagScore(lagNavn) {
+            const spillere = sbData.filter(s => s.riotName);
+            // Vi har ikke bolle-rolleinfo i scoreboard, vis lagene uten score
+            return null;
+          }
+
+          kortEl.innerHTML = `
+            <div style="width:100%;">
+              <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1.5rem;margin-bottom:1.25rem;">
+                <div>
+                  <div style="font-size:1.1rem;color:var(--cream);font-weight:600;">${e1} ${kamp.lag1}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.25rem;">Utfordrer</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:rgba(196,122,43,0.5);letter-spacing:0.1em;">VS</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.2rem;">${dager}d igjen</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:1.1rem;color:var(--cream);font-weight:600;">${kamp.lag2} ${e2}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.25rem;">Utfordrer</div>
+                </div>
+              </div>
+              <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);text-align:center;border-top:1px solid rgba(196,122,43,0.1);padding-top:0.75rem;">
+                Foreløpig score oppdateres daglig kl. 12:00 basert på competitive-kamper i krig-perioden
+              </div>
+            </div>`;
+
+        } else {
+          // Pause — vis nedtelling
+          const dager = status.dagerTilNeste;
+          tittelEl.innerHTML = `NESTE <em>KRIG</em>`;
+          subEl.textContent  = `Pause — krig #${status.krigNr + 1} starter om ${dager} ${dager === 1 ? 'dag' : 'dager'}`;
+
+          const bolleNavn = Object.keys(BOLLE_EMOJIS_KRIG);
+          const tilfeldig1 = bolleNavn[Math.floor(Math.random() * bolleNavn.length)];
+          let tilfeldig2 = tilfeldig1;
+          while (tilfeldig2 === tilfeldig1) tilfeldig2 = bolleNavn[Math.floor(Math.random() * bolleNavn.length)];
+
+          kortEl.innerHTML = `
+            <div style="width:100%;text-align:center;padding:1rem 0;">
+              <div style="font-size:2rem;margin-bottom:0.5rem;">${BOLLE_EMOJIS_KRIG[tilfeldig1]} ⚔️ ${BOLLE_EMOJIS_KRIG[tilfeldig2]}</div>
+              <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--caramel);">Hvem møtes neste gang? Ingen vet ennå.</div>
+              <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.5rem;">Krig #${status.krigNr + 1} trekkes automatisk når pausen er over</div>
+            </div>`;
+        }
+      } catch(e) {
+        kortEl.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);">Kunne ikke hente krigsstatus.</div>`;
+      }
+    }
+
+    // ── Rolle innehavere ──────────────────────────────────
+    async function loadRolleInnehavere() {
+      const mvpEl    = document.getElementById('mvp-rolle-innehavere');
+      const rottenEl = document.getElementById('rotten-rolle-innehavere');
+
+      try {
+        const res  = await fetch('https://val-stats-worker.marcus-aas-mekiassen.workers.dev/scoreboard');
+        const data = res.ok ? await res.json() : [];
+
+        // Hent hall of fame for å finne hvem som har rollene basert på siste MVP-kjøring
+        const hofRes  = await fetch('https://val-stats-worker.marcus-aas-mekiassen.workers.dev/scoreboard');
+
+        // Vi vet ikke hvem som har rollene akkurat nå uten Discord API
+        // Vis heller topp 3 og bunn 3 fra scoreboard som en indikasjon
+        const medKD = data
+          .filter(s => s.kd && s.kd !== '?' && s.kamper > 0)
+          .map(s => ({ ...s, kdNum: parseFloat(s.kd) }))
+          .sort((a, b) => b.kdNum - a.kdNum);
+
+        if (medKD.length === 0) {
+          mvpEl.textContent    = 'Ingen data tilgjengelig.';
+          rottenEl.textContent = 'Ingen data tilgjengelig.';
+          return;
+        }
+
+        const topp3   = medKD.slice(0, 3);
+        const bunn3   = medKD.slice(-3).reverse();
+
+        mvpEl.innerHTML = topp3.map((s, i) => {
+          const medals = ['🥇','🥈','🥉'];
+          return `<div style="margin-bottom:0.3rem;">${medals[i]} <strong style="color:var(--cream);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`;
+        }).join('') + `<div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.5rem;">Basert på siste scoreboard</div>`;
+
+        rottenEl.innerHTML = bunn3.map(s =>
+          `<div style="margin-bottom:0.3rem;">💀 <strong style="color:var(--cream);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`
+        ).join('') + `<div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.5rem;">Basert på siste scoreboard</div>`;
+
+      } catch(e) {
+        mvpEl.textContent    = 'Kunne ikke laste data.';
+        rottenEl.textContent = 'Kunne ikke laste data.';
+      }
+    }
   </script>
 </body>
 </html>
