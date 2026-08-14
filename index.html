@@ -848,7 +848,6 @@
     });
     restoreAdminSession();
     loadScoreboard();
-    loadKrigHistorikk();
 
     const BOLLEKRIG_URL = 'https://bollekrig-worker.marcus-aas-mekiassen.workers.dev';
 
@@ -862,45 +861,63 @@
       await Promise.all([loadKrigListe(), loadBolleStats(), loadMvpStats()]);
     }
 
+    let alleKrigResultater = [];
+
+    function byggKrigTabell(data, visAlle) {
+      const rader = visAlle ? data : data.slice(0, 8);
+      return `<table style="width:100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 0.72rem;">
+        <thead>
+          <tr style="color: var(--caramel); text-align: left; border-bottom: 1px solid rgba(196,122,43,0.2);">
+            <th style="padding: 0.4rem 0.5rem;">#</th>
+            <th style="padding: 0.4rem 0.5rem;">Lag 1</th>
+            <th style="padding: 0.4rem 0.5rem;">Lag 2</th>
+            <th style="padding: 0.4rem 0.5rem;">Resultat</th>
+            <th style="padding: 0.4rem 0.5rem;">MVP</th>
+            <th style="padding: 0.4rem 0.5rem;">Dato</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rader.map(r => {
+            const e1 = BOLLE_EMOJIS_KRIG[r.lag1] || '🍩';
+            const e2 = BOLLE_EMOJIS_KRIG[r.lag2] || '🍩';
+            const dato = new Date(r.dato).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' });
+            const resultat = r.uavgjort
+              ? `<span style="color:var(--muted)">Uavgjort</span>`
+              : r.vinner === r.lag1
+                ? `<span style="color:#5cb85c">${e1} ${r.lag1} vant</span>`
+                : `<span style="color:#5cb85c">${e2} ${r.lag2} vant</span>`;
+            return `<tr style="border-bottom: 1px solid rgba(196,122,43,0.08);">
+              <td style="padding: 0.4rem 0.5rem; color: var(--caramel);">${r.krigNr || '—'}</td>
+              <td style="padding: 0.4rem 0.5rem; color: var(--cream);">${e1} ${r.lag1} <span style="color:var(--muted)">(${r.score1}p)</span></td>
+              <td style="padding: 0.4rem 0.5rem; color: var(--cream);">${e2} ${r.lag2} <span style="color:var(--muted)">(${r.score2}p)</span></td>
+              <td style="padding: 0.4rem 0.5rem;">${resultat}</td>
+              <td style="padding: 0.4rem 0.5rem; color: var(--cream);">${r.mvp ? `⭐ ${r.mvp.navn}` : '—'}</td>
+              <td style="padding: 0.4rem 0.5rem; color: var(--muted);">${dato}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      ${data.length > 8 ? `<div style="margin-top:0.75rem; text-align:center;">
+        <button onclick="toggleKrigListe()" id="se-mer-btn" style="background:none; border:1px solid rgba(196,122,43,0.4); color:var(--caramel); font-family:'DM Mono',monospace; font-size:0.7rem; letter-spacing:0.1em; padding:0.4rem 1rem; cursor:pointer;">
+          ${visAlle ? '▲ VIS MINDRE' : `▼ SE MER (${data.length - 8} til)`}
+        </button>
+      </div>` : ''}`;
+    }
+
+    let visAlleKrig = false;
+    function toggleKrigListe() {
+      visAlleKrig = !visAlleKrig;
+      document.getElementById('krig-liste').innerHTML = byggKrigTabell(alleKrigResultater, visAlleKrig);
+    }
+
     async function loadKrigListe() {
       const el = document.getElementById('krig-liste');
       try {
         const res  = await fetch(`${BOLLEKRIG_URL}/resultater`);
         const data = await res.json();
         if (!data.length) { el.textContent = 'Ingen krigsresultater ennå.'; return; }
-        const sorted = [...data].reverse();
-        el.innerHTML = `<table style="width:100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 0.72rem;">
-          <thead>
-            <tr style="color: var(--caramel); text-align: left; border-bottom: 1px solid rgba(196,122,43,0.2);">
-              <th style="padding: 0.4rem 0.5rem;">#</th>
-              <th style="padding: 0.4rem 0.5rem;">Lag 1</th>
-              <th style="padding: 0.4rem 0.5rem;">Lag 2</th>
-              <th style="padding: 0.4rem 0.5rem;">Resultat</th>
-              <th style="padding: 0.4rem 0.5rem;">MVP</th>
-              <th style="padding: 0.4rem 0.5rem;">Dato</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${sorted.map(r => {
-              const e1 = BOLLE_EMOJIS_KRIG[r.lag1] || '🍩';
-              const e2 = BOLLE_EMOJIS_KRIG[r.lag2] || '🍩';
-              const dato = new Date(r.dato).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' });
-              const resultat = r.uavgjort
-                ? `<span style="color:var(--muted)">Uavgjort</span>`
-                : r.vinner === r.lag1
-                  ? `<span style="color:#5cb85c">${e1} ${r.lag1} vant</span>`
-                  : `<span style="color:#5cb85c">${e2} ${r.lag2} vant</span>`;
-              return `<tr style="border-bottom: 1px solid rgba(196,122,43,0.08);">
-                <td style="padding: 0.4rem 0.5rem; color: var(--caramel);">${r.krigNr || '—'}</td>
-                <td style="padding: 0.4rem 0.5rem; color: var(--cream);">${e1} ${r.lag1} <span style="color:var(--muted)">(${r.score1}p)</span></td>
-                <td style="padding: 0.4rem 0.5rem; color: var(--cream);">${e2} ${r.lag2} <span style="color:var(--muted)">(${r.score2}p)</span></td>
-                <td style="padding: 0.4rem 0.5rem;">${resultat}</td>
-                <td style="padding: 0.4rem 0.5rem; color: var(--cream);">${r.mvp ? `⭐ ${r.mvp.navn}` : '—'}</td>
-                <td style="padding: 0.4rem 0.5rem; color: var(--muted);">${dato}</td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>`;
+        alleKrigResultater = [...data].reverse();
+        el.innerHTML = byggKrigTabell(alleKrigResultater, false);
       } catch(e) { el.textContent = 'Kunne ikke laste resultater: ' + e.message; }
     }
 
@@ -948,6 +965,8 @@
           : 'Ingen MVP-data ennå.';
       } catch(e) { el.textContent = 'Feil: ' + e.message; }
     }
+
+    loadKrigHistorikk();
   </script>
 </body>
 </html>
