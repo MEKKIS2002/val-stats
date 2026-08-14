@@ -464,140 +464,68 @@
 
   <div class="glow"></div>
 
-  <button class="btn admin-toggle" onclick="toggleAdmin()">🔐 ADMIN</button>
-
-  <div class="admin-panel" id="adminPanel">
-    <div class="admin-title">Admin</div>
-
-    <div id="adminLogin">
-      <div class="field">
-        <label>Passord</label>
-        <input type="password" id="adminPassword" placeholder="Skriv inn passord">
-      </div>
-      <button class="btn" onclick="adminLogin()">Logg inn</button>
-      <div class="status" id="adminStatus"></div>
+  <!-- Nav -->
+  <nav style="position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(61,31,13,0.96);backdrop-filter:blur(10px);border-bottom:1px solid rgba(196,122,43,0.2);padding:0.5rem 2rem;display:flex;gap:0;align-items:center;">
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;color:var(--caramel);letter-spacing:0.1em;margin-right:1.5rem;flex-shrink:0;">🍩 SKOLEBOLLE</span>
+    <div style="display:flex;gap:0;flex:1;overflow-x:auto;">
+      <a href="#seksjon-scoreboard" style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;color:var(--muted);text-decoration:none;text-transform:uppercase;padding:0.3rem 0.875rem;flex-shrink:0;border-right:1px solid rgba(196,122,43,0.15);" onmouseover="this.style.color='var(--caramel)'" onmouseout="this.style.color='var(--muted)'">Scoreboard</a>
+      <a href="#seksjon-historikk" style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;color:var(--muted);text-decoration:none;text-transform:uppercase;padding:0.3rem 0.875rem;flex-shrink:0;border-right:1px solid rgba(196,122,43,0.15);" onmouseover="this.style.color='var(--caramel)'" onmouseout="this.style.color='var(--muted)'">Historikk</a>
+      <a href="#seksjon-krig" style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;color:var(--muted);text-decoration:none;text-transform:uppercase;padding:0.3rem 0.875rem;flex-shrink:0;border-right:1px solid rgba(196,122,43,0.15);" onmouseover="this.style.color='var(--caramel)'" onmouseout="this.style.color='var(--muted)'">Krig</a>
+      <a href="#seksjon-roller" style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;color:var(--muted);text-decoration:none;text-transform:uppercase;padding:0.3rem 0.875rem;flex-shrink:0;border-right:1px solid rgba(196,122,43,0.15);" onmouseover="this.style.color='var(--caramel)'" onmouseout="this.style.color='var(--muted)'">Roller</a>
+      <a href="#seksjon-poengsystem" style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;color:var(--muted);text-decoration:none;text-transform:uppercase;padding:0.3rem 0.875rem;flex-shrink:0;border-right:1px solid rgba(196,122,43,0.15);" onmouseover="this.style.color='var(--caramel)'" onmouseout="this.style.color='var(--muted)'">Poengsystem</a>
+      <a href="#seksjon-registrer" style="font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:0.15em;color:#1a0d00;text-decoration:none;text-transform:uppercase;padding:0.3rem 1.1rem;flex-shrink:0;background:var(--caramel);margin-left:auto;" onmouseover="this.style.background='#d4892f'" onmouseout="this.style.background='var(--caramel)'">🎯 Registrer deg</a>
     </div>
+  </nav>
 
-    <div id="adminContent" style="display:none;">
-      <div class="admin-actions">
-        <button class="btn" onclick="loadAdminPlayers()">Oppdater liste</button>
-        <button class="btn" onclick="adminLogout()">Logg ut</button>
-      </div>
-      <p class="admin-note">Sletting fjerner spilleren fra registreringslisten. Discord-scoreboardet oppdateres automatisk neste gang workeren kjører, eller når du kjører /trigger.</p>
-      <div class="admin-list" id="adminPlayers">
-        <div class="sb-loading">🍩 Laster spillere...</div>
-      </div>
-      <div class="status" id="adminActionStatus"></div>
-    </div>
-  </div>
+  <div class="layout" style="padding-top:3rem;">
 
-  <div class="layout">
-
-    <!-- Pågående krig / Neste krig -->
-    <div style="grid-column: 1 / -1;">
-      <div id="krig-status-seksjon">
-        <div class="section-tag">⚔️ Bollekrigen</div>
-        <div class="section-title" id="krig-status-tittel">LASTER<em>...</em></div>
-        <p class="section-sub" id="krig-status-sub"></p>
-        <div class="card" id="krig-status-kort" style="min-height: 80px; display: flex; align-items: center; justify-content: center;">
-          <div style="font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted);">🍩 Henter krigsstatus...</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Roller forklaring -->
-    <div style="grid-column: 1 / -1;">
-      <div class="section-tag">🏅 Månedlige roller</div>
-      <div class="section-title">MÅNEDENS <em>ROLLER</em></div>
-      <p class="section-sub">Deles ut 1. hver måned basert på Valorant-stats fra forrige måned</p>
-
-      <div class="card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-
-        <div>
-          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.875rem;">✨ Månedens Skoleboller</div>
-          <div style="font-size: 0.84rem; color: var(--muted); line-height: 1.8; margin-bottom: 1rem;">
-            De <strong style="color: var(--cream);">3 spillerne med høyest K/D</strong> den forrige måneden får rollen Månedens Skolebolle. De vises med en spesiell farge på serveren og æres i månedsmeldingen.
-          </div>
-          <div style="background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.2); padding: 0.75rem 1rem;">
-            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: #FFD700; letter-spacing: 0.1em; margin-bottom: 0.5rem;">KRAV</div>
-            <div style="font-size: 0.78rem; color: var(--muted); line-height: 1.7;">
-              ✅ Registrert i scoreboard-systemet<br>
-              ✅ Spilt minst 1 competitive-kamp siste 30 dager<br>
-              ✅ Blant de 3 med høyest K/D
-            </div>
-          </div>
-          <div style="margin-top: 0.75rem;">
-            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--caramel); letter-spacing: 0.1em; margin-bottom: 0.5rem;">NÅværende innehavere</div>
-            <div id="mvp-rolle-innehavere" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
-          </div>
-        </div>
-
-        <div>
-          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.875rem;">🗑️ Råtne Boller</div>
-          <div style="font-size: 0.84rem; color: var(--muted); line-height: 1.8; margin-bottom: 1rem;">
-            De <strong style="color: var(--cream);">3 spillerne med lavest K/D</strong> den forrige måneden får rollen Råtne Boller. En stille påminnelse om at det er rom for forbedring.
-          </div>
-          <div style="background: rgba(255,70,85,0.05); border: 1px solid rgba(255,70,85,0.15); padding: 0.75rem 1rem;">
-            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: #ff8a93; letter-spacing: 0.1em; margin-bottom: 0.5rem;">KRAV (for å unngå)</div>
-            <div style="font-size: 0.78rem; color: var(--muted); line-height: 1.7;">
-              ⚠️ Registrert i scoreboard-systemet<br>
-              ⚠️ Spilt minst 1 competitive-kamp siste 30 dager<br>
-              ⚠️ Blant de 3 med lavest K/D
-            </div>
-          </div>
-          <div style="margin-top: 0.75rem;">
-            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--caramel); letter-spacing: 0.1em; margin-bottom: 0.5rem;">Nåværende innehavere</div>
-            <div id="rotten-rolle-innehavere" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Bollekrig historikk -->
-    <div style="grid-column: 1 / -1; margin-bottom: 1rem;">
+    <!-- HISTORIKK -->
+    <div id="seksjon-historikk" style="grid-column: 1 / -1;">
       <div class="section-tag">⚔️ Bollekrigen</div>
       <div class="section-title">HISTORIKK & <em>STATS</em></div>
       <p class="section-sub">Alle krigsresultater, seiere, tap og MVP-statistikk</p>
 
       <div style="margin-bottom: 1rem;">
-        <button onclick="document.getElementById('poengsystem').scrollIntoView({behavior:'smooth', block:'start'})" style="background: rgba(196,122,43,0.12); border: 1px solid rgba(196,122,43,0.4); color: var(--caramel); font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; padding: 0.5rem 1.25rem; cursor: pointer; text-transform: uppercase;">
+        <button onclick="document.getElementById('seksjon-poengsystem').scrollIntoView({behavior:'smooth', block:'start'})" style="background: rgba(196,122,43,0.12); border: 1px solid rgba(196,122,43,0.4); color: var(--caramel); font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; padding: 0.5rem 1.25rem; cursor: pointer; text-transform: uppercase;">
           🎯 Hvordan deles poengene ut?
         </button>
       </div>
 
       <div class="card" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-
-        <!-- Krigsresultater -->
         <div style="grid-column: 1 / -1;">
           <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">📜 Alle krigsresultater</div>
           <div id="krig-liste" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster resultater...</div>
         </div>
-
-        <!-- Seiere og tap per bolle -->
         <div>
           <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">🏆 Seiere per bolle</div>
           <div id="bolle-seiere" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
         </div>
-
-        <!-- Tap per bolle -->
         <div>
           <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">💀 Tap per bolle</div>
           <div id="bolle-tap" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
         </div>
-
-        <!-- MVP stats -->
         <div>
           <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">⭐ Krigens MVP — flest ganger</div>
           <div id="mvp-stats" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
         </div>
-
       </div>
     </div>
 
 
-    <!-- Venstre: Registrering -->
-    <div>
+
+
+    <!-- PÅGÅENDE KRIG -->
+    <div id="seksjon-krig" style="grid-column: 1 / -1;">
+      <div class="section-tag">⚔️ Bollekrigen</div>
+      <div class="section-title" id="krig-status-tittel">LASTER<em>...</em></div>
+      <p class="section-sub" id="krig-status-sub"></p>
+      <div class="card" id="krig-status-kort" style="min-height: 80px; display: flex; align-items: center; justify-content: center;">
+        <div style="font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted);">🍩 Henter krigsstatus...</div>
+      </div>
+    </div>
+
+    <!-- SCOREBOARD + REGISTRERING -->
+    <div id="seksjon-registrer">
       <div class="section-tag">🍩 Skolebolle Discord</div>
       <div class="section-title">VAL<em>STATS</em></div>
       <p class="section-sub">Registrer deg for daglig Valorant-rangering på serveren</p>
@@ -634,8 +562,7 @@
       </div>
     </div>
 
-    <!-- Høyre: Scoreboard -->
-    <div>
+    <div id="seksjon-scoreboard">
       <div class="section-tag">🏆 Live</div>
       <div class="section-title">SCORE<em>BOARD</em></div>
       <p class="section-sub">Oppdateres daglig kl. 12:00 — basert på siste 20 kamper</p>
@@ -648,85 +575,117 @@
       </div>
     </div>
 
-    <!-- Bollekrig forklaring -->
-    <div style="grid-column: 1 / -1;">
+    <!-- MÅNEDLIGE ROLLER -->
+    <div id="seksjon-roller" style="grid-column: 1 / -1;">
+      <div class="section-tag">🏅 Månedlige roller</div>
+      <div class="section-title">MÅNEDENS <em>ROLLER</em></div>
+      <p class="section-sub">Deles ut 1. hver måned basert på Valorant-stats fra forrige måned</p>
+
+      <div class="card" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.875rem;">✨ Månedens Skoleboller</div>
+          <div style="font-size: 0.84rem; color: var(--muted); line-height: 1.8; margin-bottom: 1rem;">
+            De <strong style="color: var(--cream);">3 spillerne med høyest K/D</strong> den forrige måneden får rollen Månedens Skolebolle, med en spesiell farge på serveren. I tillegg får de <strong style="color: var(--cream);">muligheten til å flytte andre spillere mellom kanaler</strong> — en liten admin-fordel de beholder ut måneden.
+          </div>
+          <div style="background: rgba(255,215,0,0.06); border: 1px solid rgba(255,215,0,0.2); padding: 0.75rem 1rem; margin-bottom: 0.75rem;">
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: #FFD700; letter-spacing: 0.1em; margin-bottom: 0.5rem;">KRAV</div>
+            <div style="font-size: 0.78rem; color: var(--muted); line-height: 1.7;">
+              ✅ Registrert i scoreboard-systemet<br>
+              ✅ Spilt minst 1 competitive-kamp siste 30 dager<br>
+              ✅ Blant de 3 med høyest K/D
+            </div>
+          </div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--caramel); letter-spacing: 0.1em; margin-bottom: 0.5rem;">Nåværende innehavere</div>
+          <div id="mvp-rolle-innehavere" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
+        </div>
+
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.875rem;">🗑️ Råtne Boller</div>
+          <div style="font-size: 0.84rem; color: var(--muted); line-height: 1.8; margin-bottom: 1rem;">
+            De <strong style="color: var(--cream);">3 spillerne med lavest K/D</strong> den forrige måneden får rollen Råtne Boller. En stille påminnelse om at det er rom for forbedring.
+          </div>
+          <div style="background: rgba(255,70,85,0.05); border: 1px solid rgba(255,70,85,0.15); padding: 0.75rem 1rem; margin-bottom: 0.75rem;">
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: #ff8a93; letter-spacing: 0.1em; margin-bottom: 0.5rem;">KRAV (for å unngå)</div>
+            <div style="font-size: 0.78rem; color: var(--muted); line-height: 1.7;">
+              ⚠️ Registrert i scoreboard-systemet<br>
+              ⚠️ Spilt minst 1 competitive-kamp siste 30 dager<br>
+              ⚠️ Blant de 3 med lavest K/D
+            </div>
+          </div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--caramel); letter-spacing: 0.1em; margin-bottom: 0.5rem;">Nåværende innehavere</div>
+          <div id="rotten-rolle-innehavere" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- POENGSYSTEM -->
+    <div id="seksjon-poengsystem" style="grid-column: 1 / -1;">
       <div class="section-tag">⚔️ Bollekrigen</div>
-      <div class="section-title" id="poengsystem">POENG<em>SYSTEM</em></div>
+      <div class="section-title">POENG<em>SYSTEM</em></div>
       <p class="section-sub">Slik beregnes poengsummen i bollekrigene — alle spillere bidrar, men det er laget som vinner</p>
 
       <div class="card" style="display: flex; flex-direction: column; gap: 2rem;">
 
-        <!-- Steg 1: Grunnscore -->
         <div>
           <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 1rem;">Steg 1 — 📊 Grunnscore per spiller (0–100p)</div>
-          <div style="font-size: 0.84rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.7;">
-            Hver spiller får en individuell score basert på prestasjonene sine i competitive-kamper spilt <strong style="color:var(--cream)">i krig-perioden</strong>. Scoren kombinerer to ting:
-          </div>
+          <div style="font-size: 0.84rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.7;">Hver spiller får en individuell score basert på prestasjonene sine i competitive-kamper spilt <strong style="color:var(--cream)">i krig-perioden</strong>.</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
             <div style="background: rgba(0,0,0,0.2); border-left: 3px solid #378ADD; padding: 0.875rem 1rem;">
               <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #378ADD; letter-spacing: 0.1em; margin-bottom: 0.4rem;">K/D — 60% av scoren</div>
-              <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.6;">Drap delt på død. En K/D på 2.0 eller høyere gir full pott på denne delen. En K/D på 1.0 gir 30p, og 0 gir 0p.</div>
+              <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.6;">En K/D på 2.0 eller høyere gir full pott. K/D 1.0 gir 30p, 0 gir 0p.</div>
             </div>
             <div style="background: rgba(0,0,0,0.2); border-left: 3px solid #5cb85c; padding: 0.875rem 1rem;">
               <div style="font-family: 'DM Mono', monospace; font-size: 0.65rem; color: #5cb85c; letter-spacing: 0.1em; margin-bottom: 0.4rem;">Winrate — 40% av scoren</div>
-              <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.6;">Andelen kamper du vinner. 100% winrate gir 40p på denne delen. 50% gir 20p.</div>
+              <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.6;">100% winrate gir 40p. 50% gir 20p.</div>
             </div>
           </div>
-          <div style="font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: rgba(0,0,0,0.25); padding: 0.75rem 1rem; border-left: 2px solid var(--caramel); display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-            <span>📐 Formel:</span>
-            <span style="color: var(--cream);">Score = (K/D ÷ 2) × 60 &nbsp;+&nbsp; WR% × 40</span>
-            <span style="color: rgba(156,122,90,0.6);">·</span>
-            <span>Maks K/D som teller: 2.0</span>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: rgba(0,0,0,0.25); padding: 0.75rem 1rem; border-left: 2px solid var(--caramel);">
+            📐 Formel: <span style="color: var(--cream);">Score = (K/D ÷ 2) × 60 + WR% × 40</span> · Maks K/D: 2.0
           </div>
         </div>
 
         <div style="border-top: 1px solid rgba(196,122,43,0.15);"></div>
 
-        <!-- Steg 2: Bonus -->
         <div>
           <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 1rem;">Steg 2 — 🔥 Bonuspoeng per lag</div>
-          <div style="font-size: 0.84rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.7;">
-            Spesielt imponerende resultater gir <strong style="color:#5cb85c">bonuspoeng</strong> til hele laget, mens pinlige tap og uavgjorte kamper gir <strong style="color:#ff8a93">straffepoeng</strong>. Disse legges til lagets totale score.
-          </div>
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;">
-            <div style="background: rgba(92,184,92,0.1); border: 1px solid rgba(92,184,92,0.3); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+            <div style="background: rgba(92,184,92,0.1); border: 1px solid rgba(92,184,92,0.3); padding: 0.75rem 0.5rem; text-align: center;">
               <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #5cb85c;">+3p</div>
-              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Seier<br>13–0</div>
-              <div style="font-size: 0.65rem; color: rgba(92,184,92,0.6); margin-top: 0.3rem;">Perfekt runde</div>
+              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Seier 13–0</div>
+              <div style="font-size: 0.65rem; color: rgba(92,184,92,0.6); margin-top: 0.2rem;">Perfekt</div>
             </div>
-            <div style="background: rgba(92,184,92,0.07); border: 1px solid rgba(92,184,92,0.2); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+            <div style="background: rgba(92,184,92,0.07); border: 1px solid rgba(92,184,92,0.2); padding: 0.75rem 0.5rem; text-align: center;">
               <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #5cb85c;">+2p</div>
-              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Seier<br>13–1</div>
-              <div style="font-size: 0.65rem; color: rgba(92,184,92,0.6); margin-top: 0.3rem;">Nesten perfekt</div>
+              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Seier 13–1</div>
+              <div style="font-size: 0.65rem; color: rgba(92,184,92,0.6); margin-top: 0.2rem;">Nesten</div>
             </div>
-            <div style="background: rgba(255,138,147,0.07); border: 1px solid rgba(255,138,147,0.2); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+            <div style="background: rgba(255,138,147,0.07); border: 1px solid rgba(255,138,147,0.2); padding: 0.75rem 0.5rem; text-align: center;">
               <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #ff8a93;">−1p</div>
               <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Uavgjort</div>
-              <div style="font-size: 0.65rem; color: rgba(255,138,147,0.6); margin-top: 0.3rem;">Kjem ingen vei</div>
+              <div style="font-size: 0.65rem; color: rgba(255,138,147,0.6); margin-top: 0.2rem;">Kom ingen vei</div>
             </div>
-            <div style="background: rgba(255,138,147,0.07); border: 1px solid rgba(255,138,147,0.2); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+            <div style="background: rgba(255,138,147,0.07); border: 1px solid rgba(255,138,147,0.2); padding: 0.75rem 0.5rem; text-align: center;">
               <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #ff8a93;">−2p</div>
-              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Tap<br>1–13</div>
-              <div style="font-size: 0.65rem; color: rgba(255,138,147,0.6); margin-top: 0.3rem;">Pinlig</div>
+              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Tap 1–13</div>
+              <div style="font-size: 0.65rem; color: rgba(255,138,147,0.6); margin-top: 0.2rem;">Pinlig</div>
             </div>
-            <div style="background: rgba(255,138,147,0.1); border: 1px solid rgba(255,138,147,0.3); padding: 0.75rem 0.5rem; text-align: center; border-radius: 2px;">
+            <div style="background: rgba(255,138,147,0.1); border: 1px solid rgba(255,138,147,0.3); padding: 0.75rem 0.5rem; text-align: center;">
               <div style="font-family: 'DM Mono', monospace; font-size: 1rem; font-weight: bold; color: #ff8a93;">−3p</div>
-              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Tap<br>0–13</div>
-              <div style="font-size: 0.65rem; color: rgba(255,138,147,0.6); margin-top: 0.3rem;">Skam dere</div>
+              <div style="font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem;">Tap 0–13</div>
+              <div style="font-size: 0.65rem; color: rgba(255,138,147,0.6); margin-top: 0.2rem;">Skam dere</div>
             </div>
           </div>
         </div>
 
         <div style="border-top: 1px solid rgba(196,122,43,0.15);"></div>
 
-        <!-- Steg 3: Lagscore -->
         <div>
           <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 1rem;">Steg 3 — ⚖️ Lagscore og vinner</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div style="font-size: 0.84rem; color: var(--muted); line-height: 1.8;">
-              <p style="margin-bottom: 0.75rem;">Lagets grunnscore er <strong style="color:var(--cream)">gjennomsnittet</strong> av alle spillere som har spilt minst én kamp i perioden. Spillere som ikke har spilt teller ikke — de verken hjelper eller skader laget.</p>
-              <p style="margin-bottom: 0.75rem;">Dette betyr at <strong style="color:var(--cream)">et lite lag kan slå et stort lag</strong> — to spillere som presterer godt slår åtte spillere som er middelmådige.</p>
-              <p>Bonuspoengene fra steg 2 legges til sist.</p>
+              <p style="margin-bottom: 0.75rem;">Lagets grunnscore er <strong style="color:var(--cream)">gjennomsnittet</strong> av alle spillere som har spilt minst én kamp i perioden. Spillere uten kamper teller ikke.</p>
+              <p>Et <strong style="color:var(--cream)">lite lag kan slå et stort lag</strong> — to spillere som presterer godt slår åtte middelmådige.</p>
             </div>
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
               <div style="font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); background: rgba(0,0,0,0.25); padding: 0.75rem 1rem; border-left: 2px solid var(--caramel);">
@@ -747,7 +706,32 @@
       </div>
     </div>
 
+
+
+
+
     <div class="footer">Skolebolle · Valorant Stats · Oppdateres daglig 🍩</div>
+  </div>
+
+
+  <!-- Admin panel -->
+  <button id="adminBtn" onclick="toggleAdmin()" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:100;background:rgba(61,31,13,0.9);border:1px solid rgba(196,122,43,0.4);color:var(--caramel);font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;padding:0.4rem 0.875rem;cursor:pointer;backdrop-filter:blur(8px);">🔒 ADMIN</button>
+
+  <div id="adminPanel" style="display:none;position:fixed;bottom:4rem;right:1.5rem;z-index:100;background:rgba(30,15,5,0.97);border:1px solid rgba(196,122,43,0.3);padding:1.25rem;width:320px;backdrop-filter:blur(12px);">
+    <div style="font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.2em;color:var(--caramel);margin-bottom:0.75rem;">ADMIN PANEL</div>
+    <div id="adminLogin">
+      <input type="password" id="adminPassword" placeholder="Passord" style="width:100%;background:rgba(61,31,13,0.6);border:1px solid rgba(196,122,43,0.3);color:var(--cream);padding:0.5rem 0.75rem;font-family:'DM Mono',monospace;font-size:0.8rem;outline:none;margin-bottom:0.5rem;">
+      <button onclick="adminLogin()" style="width:100%;background:linear-gradient(135deg,var(--cinnamon),var(--caramel));color:var(--icing);border:none;padding:0.5rem;font-family:'Bebas Neue',sans-serif;font-size:0.9rem;letter-spacing:0.1em;cursor:pointer;">LOGG INN</button>
+      <div class="status" id="adminStatus"></div>
+    </div>
+    <div id="adminContent" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--caramel);">SPILLERE</span>
+        <button onclick="adminLogout()" style="background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:0.6rem;cursor:pointer;letter-spacing:0.1em;">LOGG UT</button>
+      </div>
+      <div id="adminPlayers" style="max-height:200px;overflow-y:auto;margin-bottom:0.5rem;"><div class="sb-loading">🍩 Laster spillere...</div></div>
+      <div class="status" id="adminActionStatus"></div>
+    </div>
   </div>
 
   <script>
@@ -1200,6 +1184,9 @@
         rottenEl.textContent = 'Kunne ikke laste data.';
       }
     }
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>
