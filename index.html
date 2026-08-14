@@ -545,6 +545,86 @@
       </div>
     </div>
 
+    <!-- Bollekrig historikk -->
+    <div style="grid-column: 1 / -1;">
+      <div class="section-tag">⚔️ Bollekrigen</div>
+      <div class="section-title">HISTORIKK & <em>STATS</em></div>
+      <p class="section-sub">Alle krigsresultater, seiere, tap og MVP-statistikk</p>
+
+      <div class="card" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+
+        <!-- Krigsresultater -->
+        <div style="grid-column: 1 / -1;">
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">📜 Alle krigsresultater</div>
+          <div id="krig-liste" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster resultater...</div>
+        </div>
+
+        <!-- Seiere og tap per bolle -->
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">🏆 Seiere per bolle</div>
+          <div id="bolle-seiere" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
+        </div>
+
+        <!-- Tap per bolle -->
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">💀 Tap per bolle</div>
+          <div id="bolle-tap" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
+        </div>
+
+        <!-- MVP stats -->
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">⭐ Krigens MVP — flest ganger</div>
+          <div id="mvp-stats" style="font-size: 0.82rem; color: var(--muted);">🍩 Laster...</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bollekrig forklaring -->
+    <div style="grid-column: 1 / -1;">
+      <div class="section-tag">⚔️ Bollekrigen</div>
+      <div class="section-title">POENG<em>SYSTEM</em></div>
+      <p class="section-sub">Slik beregnes poengsummen i bollekrigene</p>
+
+      <div class="card" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">📊 Grunnscore (0–100p)</div>
+          <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.8;">
+            <div style="margin-bottom: 0.4rem;">🎯 <strong>60%</strong> K/D (maks 2.0)</div>
+            <div style="margin-bottom: 0.4rem;">🏆 <strong>40%</strong> Winrate</div>
+            <div style="margin-top: 0.75rem; font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); background: rgba(0,0,0,0.2); padding: 0.5rem 0.75rem; border-left: 2px solid var(--caramel);">
+              Score = (K/D ÷ 2) × 60 + WR × 40<br>
+              Maks K/D som teller: 2.0
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">🔥 Bonuspoeng</div>
+          <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.8;">
+            <div style="color: #5cb85c; margin-bottom: 0.3rem;">+3p &nbsp;Seier 13–0</div>
+            <div style="color: #5cb85c; margin-bottom: 0.3rem;">+2p &nbsp;Seier 13–1</div>
+            <div style="color: #ff8a93; margin-bottom: 0.3rem;">−3p &nbsp;Tap 0–13</div>
+            <div style="color: #ff8a93; margin-bottom: 0.3rem;">−2p &nbsp;Tap 1–13</div>
+            <div style="color: #ff8a93;">−1p &nbsp;Uavgjort</div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--caramel); margin-bottom: 0.75rem;">⚖️ Lagscore</div>
+          <div style="font-size: 0.82rem; color: var(--cream); line-height: 1.8;">
+            <div style="margin-bottom: 0.5rem;">Snittet av alle aktive spillere på laget — kun de som har spilt minst 1 kamp i perioden teller.</div>
+            <div style="margin-bottom: 0.5rem;">Et lag med 2 aktive spillere kan slå et lag med 8.</div>
+            <div style="font-family: 'DM Mono', monospace; font-size: 0.7rem; color: var(--muted); background: rgba(0,0,0,0.2); padding: 0.5rem 0.75rem; border-left: 2px solid var(--caramel);">
+              Total = Lagsnitt + Bonus
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
     <div class="footer">Skolebolle · Valorant Stats · Oppdateres daglig 🍩</div>
   </div>
 
