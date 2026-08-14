@@ -925,48 +925,34 @@
 
     function byggKrigTabell(data, visAlle) {
       const rader = visAlle ? data : data.slice(0, 8);
-      let html = '<div style="display:flex;flex-direction:column;gap:0.75rem;">';
+      let html = '<div style="display:flex;flex-direction:column;gap:0.4rem;">';
       for (const r of rader) {
         const e1 = BOLLE_EMOJIS_KRIG[r.lag1] || '\u{1F369}';
         const e2 = BOLLE_EMOJIS_KRIG[r.lag2] || '\u{1F369}';
-        const dato = new Date(r.dato).toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' });
+        const dato = new Date(r.dato).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' });
         const lag1Vant = !r.uavgjort && r.vinner === r.lag1;
         const lag2Vant = !r.uavgjort && r.vinner === r.lag2;
         const lag1Color = lag1Vant ? '#5cb85c' : r.uavgjort ? 'var(--cream)' : 'var(--muted)';
         const lag2Color = lag2Vant ? '#5cb85c' : r.uavgjort ? 'var(--cream)' : 'var(--muted)';
-        const lag1Bold = lag1Vant ? 'font-weight:bold;' : '';
-        const lag2Bold = lag2Vant ? 'font-weight:bold;' : '';
+        const lag1Bold = lag1Vant ? 'font-weight:600;' : '';
+        const lag2Bold = lag2Vant ? 'font-weight:600;' : '';
         const badge = r.uavgjort
-          ? `<span style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;color:var(--muted);background:rgba(255,255,255,0.05);padding:0.2rem 0.6rem;">UAVGJORT</span>`
-          : `<span style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;color:#5cb85c;background:rgba(92,184,92,0.08);padding:0.2rem 0.6rem;">VINNER \u{1F3C6}</span>`;
+          ? `<span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);">UAVGJORT</span>`
+          : `<span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:#5cb85c;">\u{1F3C6} VINNER</span>`;
         const mvpTekst = r.mvp
-          ? `<span style="font-size:0.75rem;color:var(--muted);">\u2B50 MVP: <strong style="color:var(--cream);">${r.mvp.navn}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">${r.mvp.score}p</span></span>`
-          : `<span></span>`;
-        html += `
-          <div style="background:rgba(0,0,0,0.15);border:1px solid rgba(196,122,43,0.12);padding:1rem 1.25rem;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem;">
-              <span style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;color:var(--caramel);">KRIG #${r.krigNr || '?'}</span>
-              <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(156,122,90,0.5);">${dato}</span>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1rem;margin-bottom:0.875rem;">
-              <div>
-                <div style="font-size:1rem;color:${lag1Color};${lag1Bold}">${e1} ${r.lag1}</div>
-                <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--caramel);margin-top:0.25rem;">${r.score1}p</div>
-              </div>
-              <div style="text-align:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:rgba(156,122,90,0.35);letter-spacing:0.1em;">VS</div>
-              <div style="text-align:right;">
-                <div style="font-size:1rem;color:${lag2Color};${lag2Bold}">${r.lag2} ${e2}</div>
-                <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--caramel);margin-top:0.25rem;">${r.score2}p</div>
-              </div>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(196,122,43,0.1);padding-top:0.6rem;">
-              ${badge}${mvpTekst}
-            </div>
-          </div>`;
+          ? `<span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);">\u2B50 ${r.mvp.navn} ${r.mvp.score}p</span>`
+          : '';
+        html += `<div style="background:rgba(0,0,0,0.15);border:1px solid rgba(196,122,43,0.1);padding:0.5rem 0.875rem;display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:0.5rem;">
+          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--caramel);white-space:nowrap;">#${r.krigNr||'?'}</span>
+          <div style="font-size:0.82rem;color:${lag1Color};${lag1Bold}">${e1} ${r.lag1} <span style="font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:normal;color:var(--caramel);">${r.score1}p</span></div>
+          <div style="text-align:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.4);padding:0 0.25rem;">vs</div>
+          <div style="font-size:0.82rem;color:${lag2Color};${lag2Bold}">${r.lag2} ${e2} <span style="font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:normal;color:var(--caramel);">${r.score2}p</span></div>
+          <div style="text-align:right;white-space:nowrap;">${badge}${mvpTekst ? ' &nbsp;' + mvpTekst : ''}<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(156,122,90,0.4);margin-left:0.5rem;">${dato}</span></div>
+        </div>`;
       }
       html += '</div>';
       if (data.length > 8) {
-        html += `<div style="margin-top:0.75rem;text-align:center;"><button onclick="toggleKrigListe()" style="background:none;border:1px solid rgba(196,122,43,0.4);color:var(--caramel);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.1em;padding:0.5rem 1.5rem;cursor:pointer;">${visAlle ? '\u25B2 VIS MINDRE' : '\u25BC SE MER (' + (data.length - 8) + ' til)'}</button></div>`;
+        html += `<div style="margin-top:0.75rem;text-align:center;"><button onclick="toggleKrigListe()" style="background:none;border:1px solid rgba(196,122,43,0.4);color:var(--caramel);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.1em;padding:0.4rem 1.25rem;cursor:pointer;">${visAlle ? '\u25B2 VIS MINDRE' : '\u25BC SE MER (' + (data.length - 8) + ' til)'}</button></div>`;
       }
       return html;
     }
