@@ -748,7 +748,8 @@
 
     // ── Admin ─────────────────────────────────────────────
     function toggleAdmin() {
-      document.getElementById('adminPanel').classList.toggle('open');
+      const panel = document.getElementById('adminPanel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
     }
 
     function adminLogin() {
