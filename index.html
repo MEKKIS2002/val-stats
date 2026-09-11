@@ -85,7 +85,8 @@
       position: relative;
       z-index: 10;
       width: 100%;
-      max-width: 1000px;
+      max-width: 1100px;
+      margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 2rem;
@@ -94,7 +95,93 @@
     }
 
     @media (max-width: 768px) {
-      .layout { grid-template-columns: 1fr; }
+      body { font-size: 14px; }
+
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+        padding: 0.75rem;
+      }
+
+      /* Nav */
+      nav {
+        padding: 0.4rem 0.75rem !important;
+        gap: 0 !important;
+      }
+      nav span:first-child {
+        display: none;
+      }
+      nav > div {
+        gap: 0 !important;
+      }
+      nav a {
+        font-size: 0.55rem !important;
+        padding: 0.3rem 0.5rem !important;
+      }
+
+      /* Cards */
+      .card {
+        padding: 1rem !important;
+      }
+
+      /* All inline grids collapse to 1 col */
+      .card > div[style*="grid-template-columns: 1fr 1fr"],
+      .card > div[style*="grid-template-columns: 1fr 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* Poengsystem bonus grid */
+      div[style*="grid-template-columns: repeat(6, 1fr)"] {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+      div[style*="grid-template-columns: repeat(5, 1fr)"] {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+
+      /* Rolle cards */
+      div[style*="grid-template-columns: 1fr 1fr"][class!="layout"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* Krig VS layout */
+      div[style*="grid-template-columns: 1fr auto 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      /* Scoreboard rows */
+      .sb-row {
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .sb-right {
+        justify-content: flex-start;
+      }
+
+      /* Section titles */
+      .section-title {
+        font-size: 2rem !important;
+      }
+
+      /* Riot input row */
+      .riot-row {
+        grid-template-columns: 1fr auto 3rem !important;
+      }
+
+      /* Krig status kort */
+      #krig-status-kort {
+        padding: 0.75rem !important;
+      }
+
+      /* Admin panel */
+      #adminPanel {
+        width: calc(100vw - 3rem) !important;
+        right: 0.75rem !important;
+      }
+
+      /* Historikk grid */
+      div[style*="grid-template-columns: 1fr 1fr 1fr"][style*="gap: 1.5rem"] {
+        grid-template-columns: 1fr !important;
+      }
     }
 
     @keyframes fadeUp {
@@ -477,7 +564,7 @@
     </div>
   </nav>
 
-  <div class="layout" style="padding-top:3rem;">
+  <div class="layout" style="padding-top:3.5rem; padding-left:1rem; padding-right:1rem; box-sizing:border-box;">
 
     <!-- HISTORIKK -->
     <div id="seksjon-historikk" style="grid-column: 1 / -1;">
@@ -1104,11 +1191,31 @@
     }
 
     loadKrigHistorikk();
-    loadKrigStatus();
+
+    function startNedtelling() {
+      function oppdater() {
+        const el = document.getElementById('krig-nedtelling');
+        if (!el) return;
+        const slutt = parseInt(el.dataset.slutt);
+        if (!slutt || isNaN(slutt)) return;
+        const diff = slutt - Date.now();
+        if (diff <= 0) { el.textContent = 'Ferdig'; return; }
+        const d = Math.floor(diff / 86400000);
+        const t = Math.floor((diff % 86400000) / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        el.textContent = d > 0
+          ? `${d}d ${String(t).padStart(2,'0')}t ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`
+          : `${String(t).padStart(2,'0')}t ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+      }
+      oppdater();
+      setInterval(oppdater, 1000);
+    }
+    loadKrigStatus().then(() => setTimeout(startNedtelling, 100));
     loadRolleInnehavere();
 
     // ── Krig status ───────────────────────────────────────
-    async function loadKrigStatus() {
+    async function loadKrigStatus() { // returns promise
       const tittelEl = document.getElementById('krig-status-tittel');
       const subEl    = document.getElementById('krig-status-sub');
       const kortEl   = document.getElementById('krig-status-kort');
