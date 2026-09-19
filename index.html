@@ -217,6 +217,8 @@
     }
     .sb-stats strong { color: var(--text); }
     .sb-inactive { opacity: 0.35; }
+    .sb-hover:hover { background: rgba(255,255,255,0.03); }
+    .hist-row.sb-hover:hover { background: rgba(255,255,255,0.03); }
 
     /* ── Pill / badge ── */
     .pill {
@@ -666,6 +668,106 @@
     }
 
     /* ── Mobile ── */
+    /* Skeleton */
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 2px;
+    }
+    .skel-row {
+      display: grid;
+      grid-template-columns: 2rem 1fr auto;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+    }
+
+    /* Fade tabs */
+    .tab-panel { animation: none; }
+    .tab-panel.active { animation: fadeIn 0.18s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn 0.15s ease;
+    }
+    .modal {
+      background: #111;
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 540px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-body { padding: 20px; }
+
+    /* Refresh indicator */
+    #refreshIndicator {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    /* Next war badge */
+    .next-war-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border: 1px solid;
+      margin-left: 8px;
+    }
+    .badge-normal    { color: var(--muted);   border-color: rgba(255,255,255,0.1); }
+    .badge-alliance  { color: var(--accent);  border-color: rgba(196,122,43,0.4); }
+    .badge-royale    { color: #9b59b6;        border-color: rgba(155,89,182,0.4); }
+
+    /* Win streak */
+    .streak-badge {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      color: var(--green);
+      margin-left: 6px;
+    }
+
     @media (max-width: 640px) {
       main { padding: 64px 14px 60px; }
       .two-col { grid-template-columns: 1fr; }
@@ -727,8 +829,11 @@
           <div class="card">
             <div class="form-field">
               <label class="form-label">Din Discord User ID</label>
-              <input class="form-input" type="text" id="discordId" placeholder="270587211907334146">
-              <div class="form-hint">Innstillinger → Avansert → Developer Mode, høyreklikk deg selv → <strong onclick="">Copy User ID</strong></div>
+              <div style="display:flex;gap:0;">
+                <input class="form-input" type="text" id="discordId" placeholder="270587211907334146" autocomplete="off" style="flex:1;">
+                <button onclick="copyDiscordId()" title="Kopier" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-left:none;color:var(--muted);font-family:var(--mono);font-size:0.65rem;padding:0 12px;cursor:pointer;white-space:nowrap;" id="copyBtn">⎘ Kopier</button>
+              </div>
+              <div class="form-hint">Innstillinger → Avansert → Developer Mode, høyreklikk deg selv → <strong>Copy User ID</strong></div>
             </div>
             <div class="form-field">
               <label class="form-label">Riot ID</label>
@@ -762,7 +867,7 @@
           </div>
           <div class="card">
             <div id="scoreboard"><div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);padding:12px 0;">Laster...</div></div>
-            <div style="font-family:var(--mono);font-size:0.6rem;color:var(--muted);margin-top:12px;" id="sb-updated"></div>
+            <div id="refreshIndicator"></div>
           </div>
         </div>
 
@@ -824,6 +929,16 @@
         </button>
         <div class="collapse-content">
           <div id="mvp-stats" style="font-size:0.82rem;color:var(--muted);">Laster...</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <button class="collapse-trigger" onclick="toggleCollapse(this)">
+          <span>🏅 All-time rekorder</span>
+          <span class="collapse-arrow">↓</span>
+        </button>
+        <div class="collapse-content">
+          <div id="alltime-records" style="font-size:0.82rem;color:var(--muted);">Laster...</div>
         </div>
       </div>
     </div>
@@ -980,6 +1095,19 @@
   <footer>Skolebolle · Valorant Stats · Oppdateres daglig 🍩</footer>
 
   <!-- Admin button -->
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop" style="display:none;" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle"></div>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Records section (added to historikk tab dynamically) -->
+
   <button id="adminBtn" onclick="toggleAdmin()">⚙ Admin</button>
 
   <!-- Admin panel -->
@@ -1092,6 +1220,9 @@
       setTimeout(() => { el.style.display = 'none'; }, 4000);
     }
 
+    const _playerCache = {};
+    let _playerIdx = 0;
+
     function renderScoreboardItem(s, rank, pil) {
       const rankNavn  = (s.rank || 'Unranked').split(' ')[0];
       const emoji     = RANK_EMOJIS[rankNavn] || '⬜';
@@ -1106,7 +1237,9 @@
       if (pil === '🔼') pilHtml = ' <span class="pill pill-up">↑</span>';
       else if (pil === '🔽') pilHtml = ' <span class="pill pill-down">↓</span>';
       else if (pil === '🆕') pilHtml = ' <span class="pill pill-new">new</span>';
-      return '<div class="sb-item' + inactive + '">' +
+      const idx = _playerIdx++;
+      _playerCache[idx] = s;
+      return '<div class="sb-item sb-hover' + inactive + '" onclick="openPlayerModal(' + idx + ')" style="cursor:pointer;">' +
         '<div class="sb-rank">' + (medal || rank) + '</div>' +
         '<div class="sb-name">' + s.riotName + sleepIcon + pilHtml +
           '<small>' + emoji + ' ' + (s.rank || 'Unranked') + agent + '</small></div>' +
@@ -1114,26 +1247,50 @@
         '</div>';
     }
 
-    async function loadScoreboard() {
-      const el = document.getElementById('scoreboard');
+    // Skeleton loaders
+    function renderSkeleton(rows, cols) {
+      return Array(rows).fill(0).map(() =>
+        '<div class="skel-row">' +
+        '<div class="skeleton" style="width:24px;height:16px;"></div>' +
+        '<div><div class="skeleton" style="width:120px;height:13px;margin-bottom:5px;"></div>' +
+        '<div class="skeleton" style="width:80px;height:10px;"></div></div>' +
+        '<div class="skeleton" style="width:60px;height:24px;"></div></div>'
+      ).join('');
+    }
+
+    let _lastSbFetch = null;
+    let _sbData = [];
+
+    async function loadScoreboard(silent = false) {
+      const el  = document.getElementById('scoreboard');
+      const ind = document.getElementById('refreshIndicator');
       if (!el) return;
+      if (!silent) el.innerHTML = renderSkeleton(6);
       try {
         const res   = await fetch(WORKER_URL + '/scoreboard');
         const stats = await res.json();
-        if (!stats || !stats.length) {
+        _sbData = stats || [];
+        if (!_sbData.length) {
           el.innerHTML = '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);padding:12px 0;">Ingen spillere.</div>';
           return;
         }
-        el.innerHTML = stats.map((s, i) => renderScoreboardItem(s, i+1, '')).join('');
-        const upd = document.getElementById('sb-updated');
-        if (upd) {
-          const now = new Date();
-          upd.textContent = 'Sist oppdatert: ' + now.toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'});
-        }
+        el.innerHTML = _sbData.map((s, i) => renderScoreboardItem(s, i+1, '')).join('');
+        _lastSbFetch = Date.now();
+        updateRefreshIndicator();
       } catch(err) {
-        el.innerHTML = '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);">Feil: ' + err.message + '</div>';
+        if (!silent) el.innerHTML = '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);">Feil: ' + err.message + '</div>';
       }
     }
+
+    function updateRefreshIndicator() {
+      const ind = document.getElementById('refreshIndicator');
+      if (!ind || !_lastSbFetch) return;
+      const mins = Math.floor((Date.now() - _lastSbFetch) / 60000);
+      ind.textContent = mins < 1 ? 'Oppdatert nå' : 'Oppdatert ' + mins + ' min siden';
+    }
+
+    setInterval(() => { loadScoreboard(true); }, 5 * 60 * 1000);
+    setInterval(updateRefreshIndicator, 30000);
 
     function byggKrigTabell(data, visAlle) {
       const rader = visAlle ? data : data.slice(0, 8);
@@ -1147,7 +1304,9 @@
         const teams = r.erBattleRoyale ? 'Battle Royale'
           : e1+' '+r.lag1+' vs '+e2+' '+(r.lag2||'');
         const mvp = r.mvp ? ' · MVP: '+r.mvp.navn+' '+r.mvp.score+'p' : '';
-        return '<div class="hist-row">'+
+        const kidx = _playerIdx++;
+        _playerCache[kidx] = r;
+        return '<div class="hist-row sb-hover" onclick="openKrigModal(' + kidx + ')" style="cursor:pointer;transition:background 0.1s;">'+
           '<div class="hist-num">#'+(r.krigNr||'?')+'<br><span style="color:var(--muted);font-size:0.55rem;">'+dato+'</span></div>'+
           '<div class="hist-teams"><strong>'+teams+'</strong><small>'+r.score1+'p vs '+r.score2+'p'+mvp+'</small></div>'+
           badge+'</div>';
@@ -1312,7 +1471,7 @@
             </div>
             <button onclick="deletePlayer('${escapeAttr(player.discordId)}', '${escapeAttr(player.label)}')"
               style="background:none;border:1px solid rgba(224,85,85,0.25);color:var(--danger);font-family:var(--mono);font-size:0.58rem;padding:4px 10px;cursor:pointer;letter-spacing:0.05em;"
-              onmouseover="this.style.background='rgba(224,85,85,0.1)'" onmouseout="this.style.background='none'">
+>
               Slett
             </button>
           </div>
@@ -1544,7 +1703,8 @@
           // Pause — vis nedtelling
           const dager = status.dagerTilNeste;
           tittelEl.innerHTML = `NESTE <em>KRIG</em>`;
-          subEl.textContent  = `Pause — krig #${status.krigNr + 1} starter om ${dager} ${dager === 1 ? 'dag' : 'dager'}`;
+          const nesteTypePause = getNesteKrigType(status.krigNr);
+          subEl.innerHTML = `Pause — neste krig starter om ${dager} ${dager === 1 ? 'dag' : 'dager'} <span class="next-war-badge ${nesteTypePause.cls}">${nesteTypePause.label}</span>`;
 
           const bolleNavn = Object.keys(BOLLE_EMOJIS_KRIG);
           const tilfeldig1 = bolleNavn[Math.floor(Math.random() * bolleNavn.length)];
@@ -1608,10 +1768,200 @@
       }
     }
 
+    // ── Copy Discord ID ──
+    function copyDiscordId() {
+      const val = document.getElementById('discordId').value;
+      if (!val) return;
+      navigator.clipboard.writeText(val).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✓ Kopiert';
+        setTimeout(() => { btn.textContent = '⎘ Kopier'; }, 2000);
+      });
+    }
+
+    // ── Modal ──
+    function openModal(title, bodyHtml) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = bodyHtml;
+      document.getElementById('modalBackdrop').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('modalBackdrop').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // ── Player modal ──
+    function openPlayerModal(idx) {
+      const s = _playerCache[idx];
+      if (!s) return;
+      const rankNavn = (s.rank || 'Unranked').split(' ')[0];
+      const emoji    = RANK_EMOJIS[rankNavn] || '⬜';
+      const kdStr    = s.kd === '?' ? '—' : s.kd;
+      const wrStr    = s.winrate === '?' ? '—' : s.winrate + '%';
+      const agent    = (!s.topAgent || s.topAgent === '?') ? '—' : s.topAgent;
+      const inaktiv  = s.erInaktiv ? '<span style="font-family:var(--mono);font-size:0.6rem;color:var(--danger);margin-left:8px;">💤 Inaktiv</span>' : '';
+
+      const statGrid = (label, val, accent) =>
+        '<div style="padding:14px;border:1px solid var(--border);">' +
+        '<div style="font-family:var(--mono);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">' + label + '</div>' +
+        '<div style="font-size:1.2rem;font-weight:500;' + (accent ? 'color:var(--accent)' : '') + '">' + val + '</div>' +
+        '</div>';
+
+      const html =
+        '<div style="margin-bottom:16px;">' +
+          '<div style="font-size:1.1rem;font-weight:500;">' + s.riotName + inaktiv + '</div>' +
+          '<div style="font-family:var(--mono);font-size:0.65rem;color:var(--muted);margin-top:4px;">' + emoji + ' ' + (s.rank || 'Unranked') + ' · ' + agent + '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">' +
+          statGrid('K/D', kdStr, true) +
+          statGrid('Winrate', wrStr, false) +
+          statGrid('Kamper', s.kamper || '—', false) +
+        '</div>' +
+        (s.erInaktiv ? '<div style="font-family:var(--mono);font-size:0.68rem;color:var(--muted);border:1px solid var(--border);padding:10px 14px;">💤 Har ikke spilt competitive på 30+ dager</div>' : '') +
+        '<div style="margin-top:16px;">' +
+          '<div style="font-family:var(--mono);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Finn spilleren</div>' +
+          '<a href="https://tracker.gg/valorant/profile/riot/' + encodeURIComponent(s.riotName + '#' + (s.tag || '')) + '/overview" target="_blank" ' +
+            'style="display:inline-block;font-family:var(--mono);font-size:0.65rem;color:var(--accent);text-decoration:none;border:1px solid rgba(196,122,43,0.3);padding:6px 12px;">' +
+            '↗ Tracker.gg' +
+          '</a>' +
+        '</div>';
+
+      openModal(s.riotName, html);
+    }
+
+    // ── Krig result modal ──
+    function openKrigModal(idx) {
+      const r = _playerCache[idx];
+      if (!r) return;
+      const e1 = BOLLE_EMOJIS_KRIG[r.lag1] || '🍩';
+      const e2 = r.lag2 ? (BOLLE_EMOJIS_KRIG[r.lag2] || '🍩') : '';
+      const dato = new Date(r.dato).toLocaleDateString('nb-NO', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+      const type = r.erBattleRoyale ? 'Battle Royale' : r.erAllianse ? 'Alliansekrig' : 'Normal krig';
+
+      const html =
+        '<div style="font-family:var(--mono);font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">' + dato + ' · ' + type + '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;margin-bottom:20px;">' +
+          '<div><div style="font-size:1rem;font-weight:500;">' + e1 + ' ' + r.lag1 + '</div>' +
+            '<div style="font-family:var(--mono);font-size:1.2rem;color:' + (!r.uavgjort && r.vinner===r.lag1 ? 'var(--green)' : 'var(--muted)') + ';margin-top:4px;">' + r.score1 + 'p</div></div>' +
+          '<div style="font-family:var(--mono);font-size:0.65rem;color:var(--border);">vs</div>' +
+          '<div style="text-align:right;"><div style="font-size:1rem;font-weight:500;">' + (r.lag2 || '') + ' ' + e2 + '</div>' +
+            '<div style="font-family:var(--mono);font-size:1.2rem;color:' + (!r.uavgjort && r.vinner===r.lag2 ? 'var(--green)' : 'var(--muted)') + ';margin-top:4px;">' + r.score2 + 'p</div></div>' +
+        '</div>' +
+        (r.uavgjort ? '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);">Uavgjort</div>' :
+          '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--green);">🏆 ' + (r.vinner||'') + ' vant</div>') +
+        (r.mvp ? '<div style="margin-top:12px;padding:10px 14px;border:1px solid var(--border);font-family:var(--mono);font-size:0.68rem;color:var(--muted);">⭐ MVP: <strong style="color:var(--text);">' + r.mvp.navn + '</strong> · ' + r.mvp.score + 'p</div>' : '');
+
+      openModal('Bollekrigen #' + (r.krigNr || '?'), html);
+    }
+
+    // ── Bolle profile modal ──
+    function openBolleModal(bolleName) {
+      const emoji = BOLLE_EMOJIS_KRIG[bolleName] || '🍩';
+      const spillere = _sbData.filter(s => s.bolleName === bolleName || s.bolle === bolleName);
+
+      // Win streak from resultater
+      const wins = alleKrigResultater.filter(r => r.vinner && r.vinner.includes(bolleName)).length;
+      const losses = alleKrigResultater.filter(r => r.tapsere && r.tapsere.includes(bolleName)).length;
+
+      let streak = 0;
+      for (let i = alleKrigResultater.length - 1; i >= 0; i--) {
+        const r = alleKrigResultater[i];
+        if (r.vinner && r.vinner.includes(bolleName)) streak++;
+        else if (r.tapsere && r.tapsere.includes(bolleName)) break;
+      }
+
+      const statRow = (label, val) =>
+        '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;">' +
+        '<span style="color:var(--muted);">' + label + '</span>' +
+        '<span style="font-family:var(--mono);">' + val + '</span></div>';
+
+      const html =
+        '<div style="font-size:1.5rem;margin-bottom:16px;">' + emoji + '</div>' +
+        statRow('Seiere', wins) +
+        statRow('Tap', losses) +
+        (streak > 1 ? statRow('Seiersstreak', '🔥 ' + streak + ' på rad') : '') +
+        '<div style="margin-top:16px;font-family:var(--mono);font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Spillere på laget</div>' +
+        (spillere.length
+          ? spillere.map(s => '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;"><span>' + s.riotName + '</span><span style="font-family:var(--mono);color:var(--muted);">K/D ' + s.kd + '</span></div>').join('')
+          : '<div style="font-family:var(--mono);font-size:0.68rem;color:var(--muted);">Bolle-rolle ikke koblet til scoreboard.</div>');
+
+      openModal(emoji + ' ' + bolleName, html);
+    }
+
+    // ── All-time records ──
+    async function loadAlltimeRecords() {
+      const el = document.getElementById('alltime-records');
+      if (!el) return;
+      try {
+        const [sbRes, mvpRes] = await Promise.all([
+          fetch(WORKER_URL + '/scoreboard'),
+          fetch(BOLLEKRIG_URL + '/mvp-stats'),
+        ]);
+        const sb  = await sbRes.json();
+        const mvp = await mvpRes.json();
+
+        const aktive = (sb || []).filter(s => s.kd && s.kd !== '?');
+        const topKD  = aktive.sort((a,b) => parseFloat(b.kd) - parseFloat(a.kd))[0];
+
+        const totWins = alleKrigResultater.reduce((acc, r) => {
+          if (r.vinner) { r.vinner.split('&').forEach(v => { const n = v.trim(); acc[n] = (acc[n]||0)+1; }); }
+          return acc;
+        }, {});
+        const topWinner = Object.entries(totWins).sort((a,b) => b[1]-a[1])[0];
+
+        const topMVP = Object.entries(mvp || {}).sort((a,b) => b[1]-a[1])[0];
+
+        const rec = (label, val, sub) =>
+          '<div style="padding:14px;border:1px solid var(--border);">' +
+          '<div style="font-family:var(--mono);font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">' + label + '</div>' +
+          '<div style="font-weight:500;font-size:0.9rem;">' + val + '</div>' +
+          (sub ? '<div style="font-family:var(--mono);font-size:0.62rem;color:var(--muted);margin-top:3px;">' + sub + '</div>' : '') +
+          '</div>';
+
+        el.innerHTML =
+          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">' +
+          rec('Høyest K/D', topKD ? topKD.riotName : '—', topKD ? 'K/D ' + topKD.kd : '') +
+          rec('Flest krigsseiere', topWinner ? topWinner[0] : '—', topWinner ? topWinner[1] + ' seier(e)' : '') +
+          rec('Flest MVP', topMVP ? topMVP[0] : '—', topMVP ? topMVP[1] + ' gang(er)' : '') +
+          '</div>';
+      } catch(e) {
+        el.textContent = 'Kunne ikke laste rekorder.';
+      }
+    }
+
+    // ── Next war badge in krig status ──
+    function getNesteKrigType(krigNr) {
+      const neste = krigNr + 1;
+      if (neste >= 8 && (neste - 8) % 5 === 0) return { label: 'Alliansekrig', cls: 'badge-alliance' };
+      if (neste >= 9 && (neste - 9) % 5 === 0) return { label: 'Battle Royale', cls: 'badge-royale' };
+      return { label: 'Normal krig', cls: 'badge-normal' };
+    }
+
+    // ── Win streak calculator ──
+    function beregnStreaks() {
+      const streaks = {};
+      [...alleKrigResultater].reverse().forEach(r => {
+        if (!r.vinner || r.uavgjort) return;
+        r.vinner.split('&').map(v => v.trim()).forEach(bolle => {
+          if (streaks[bolle] === undefined) streaks[bolle] = 0;
+          if (r.vinner.includes(bolle)) streaks[bolle]++;
+        });
+      });
+      return streaks;
+    }
+
     // ── Init ──
     restoreAdminSession();
     loadScoreboard();
-    loadKrigHistorikk();
+    loadKrigHistorikk().then(() => {
+      loadAlltimeRecords();
+    });
     if (typeof loadKrigStatus === 'function') {
       loadKrigStatus().then(() => setTimeout(startNedtelling, 200)).catch(() => {});
     }
