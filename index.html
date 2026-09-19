@@ -21,6 +21,12 @@
       --green:    #4caf7d;
       --mono:     'JetBrains Mono', monospace;
       --sans:     'Inter', sans-serif;
+
+      /* Aliases for old JS compatibility */
+      --cream:    #e8e8e8;
+      --caramel:  #C47A2B;
+      --cinnamon: #a0621e;
+      --icing:    #0a0a0a;
     }
 
     body {
@@ -1109,9 +1115,11 @@
     // ── Status display helpers ──
     function showStatus(id, msg, type) {
       const el = document.getElementById(id);
+      if (!el) return;
       el.textContent = msg;
-      el.className = `status-msg show ${type}`;
-      setTimeout(() => { el.className = 'status-msg'; }, 4000);
+      el.className = 'status-msg show ' + (type || '');
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 4000);
     }
 
     // ── Scoreboard renderer (new style) ──
@@ -1209,7 +1217,7 @@
     // ── Admin ─────────────────────────────────────────────
     function toggleAdmin() {
       const panel = document.getElementById('adminPanel');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
     }
 
     function adminLogin() {
@@ -1220,7 +1228,7 @@
       }
 
       sessionStorage.setItem('valStatsAdmin', 'true');
-      document.getElementById('adminLogin').style.display = 'none';
+      document.getElementById('adminLoginPanel').style.display = 'none';
       document.getElementById('adminContent').style.display = 'block';
       setAdminStatus('success', '✅ Du er logget inn.');
       loadAdminPlayers();
@@ -1229,7 +1237,7 @@
     function adminLogout() {
       sessionStorage.removeItem('valStatsAdmin');
       document.getElementById('adminPassword').value = '';
-      document.getElementById('adminLogin').style.display = 'block';
+      document.getElementById('adminLoginPanel').style.display = 'block';
       document.getElementById('adminContent').style.display = 'none';
       document.getElementById('adminPlayers').innerHTML = '<div class="sb-loading">🍩 Laster spillere...</div>';
       setAdminActionStatus('', '');
@@ -1238,7 +1246,7 @@
 
     function restoreAdminSession() {
       if (sessionStorage.getItem('valStatsAdmin') === 'true') {
-        document.getElementById('adminLogin').style.display = 'none';
+        document.getElementById('adminLoginPanel').style.display = 'none';
         document.getElementById('adminContent').style.display = 'block';
         loadAdminPlayers();
       }
@@ -1363,46 +1371,32 @@
     // ── Scoreboard ────────────────────────────────────────
     async function loadScoreboard() {
       const el = document.getElementById('scoreboard');
-
       try {
-        const res  = await fetch(`${WORKER_URL}/scoreboard`);
-        if (!res.ok) throw new Error('Ingen data');
-        const data = await res.json();
-
-        if (!data.length) {
-          el.innerHTML = '<div class="sb-loading">Ingen spillere registrert ennå.</div>';
+        const res   = await fetch(`${WORKER_URL}/scoreboard`);
+        const stats = await res.json();
+        if (!stats.length) {
+          el.innerHTML = '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);padding:12px 0;">Ingen spillere registrert.</div>';
           return;
         }
 
-        el.innerHTML = data.map((s, i) => {
-          const rankNavn = (s.rank || 'Unranked').split(' ')[0];
-          const emoji    = RANK_EMOJIS[rankNavn] || '⬜';
-          const medal    = MEDALS[i] ? MEDALS[i] : `${i + 1}.`;
-          const kd       = s.kd && s.kd !== '?' ? s.kd : '—';
-          const wr       = s.winrate && s.winrate !== '?' ? `${s.winrate}%` : '—';
-          const agent    = s.topAgent && s.topAgent !== '?' ? s.topAgent : '—';
-          const rowClass = TOP_CLASSES[i] || '';
+        // Hent forrige rangering
+        const prevRaw = null; // vil bygge opp over tid
+        const prevRanking = {};
 
-          return `
-            <div class="sb-row ${rowClass}">
-              <div class="sb-pos ${i < 3 ? 'medal' : ''}">${medal}</div>
-              <div>
-                <div class="sb-name">${s.riotName}<span style="color:var(--muted)">#${s.tag}</span></div>
-                <div class="sb-rank">${emoji} ${s.rank || 'Unranked'} · ${agent}</div>
-              </div>
-              <div class="sb-stats">
-                <div>K/D <span class="hl">${kd}</span></div>
-                <div>WR <span class="hl">${wr}</span></div>
-              </div>
-            </div>`;
-        }).join('');
+        let html = '';
+        stats.forEach((s, i) => {
+          const pil = getPil(s.discordId, i, prevRanking);
+          html += renderScoreboardItem(s, i + 1, pil);
+        });
+        el.innerHTML = html;
 
-        const now = new Date();
-        document.getElementById('sb-updated').textContent =
-          `Sist oppdatert ${now.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long' })} kl. ${now.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}`;
-
-      } catch {
-        el.innerHTML = '<div class="sb-loading" style="color:var(--muted)">Scoreboard lastes inn daglig kl. 12:00</div>';
+        const updated = document.getElementById('sb-updated');
+        if (updated) {
+          const now = new Date();
+          updated.textContent = `Sist oppdatert: ${now.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}`;
+        }
+      } catch (err) {
+        el.innerHTML = `<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);">Feil: ${err.message}</div>`;
       }
     }
 
@@ -1449,16 +1443,16 @@
           ? `<span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);">\u2B50 ${r.mvp.navn} ${r.mvp.score}p</span>`
           : '';
         html += `<div style="background:rgba(0,0,0,0.15);border:1px solid rgba(196,122,43,0.1);padding:0.5rem 0.875rem;display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:0.5rem;">
-          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--caramel);white-space:nowrap;">#${r.krigNr||'?'}</span>
-          <div style="font-size:0.82rem;color:${lag1Color};${lag1Bold}">${e1} ${r.lag1} <span style="font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:normal;color:var(--caramel);">${r.score1}p</span></div>
+          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--accent);white-space:nowrap;">#${r.krigNr||'?'}</span>
+          <div style="font-size:0.82rem;color:${lag1Color};${lag1Bold}">${e1} ${r.lag1} <span style="font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:normal;color:var(--accent);">${r.score1}p</span></div>
           <div style="text-align:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.4);padding:0 0.25rem;">vs</div>
-          <div style="font-size:0.82rem;color:${lag2Color};${lag2Bold}">${r.lag2} ${e2} <span style="font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:normal;color:var(--caramel);">${r.score2}p</span></div>
+          <div style="font-size:0.82rem;color:${lag2Color};${lag2Bold}">${r.lag2} ${e2} <span style="font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:normal;color:var(--accent);">${r.score2}p</span></div>
           <div style="text-align:right;white-space:nowrap;">${badge}${mvpTekst ? ' &nbsp;' + mvpTekst : ''}<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(156,122,90,0.4);margin-left:0.5rem;">${dato}</span></div>
         </div>`;
       }
       html += '</div>';
       if (data.length > 8) {
-        html += `<div style="margin-top:0.75rem;text-align:center;"><button onclick="toggleKrigListe()" style="background:none;border:1px solid rgba(196,122,43,0.4);color:var(--caramel);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.1em;padding:0.4rem 1.25rem;cursor:pointer;">${visAlle ? '\u25B2 VIS MINDRE' : '\u25BC SE MER (' + (data.length - 8) + ' til)'}</button></div>`;
+        html += `<div style="margin-top:0.75rem;text-align:center;"><button onclick="toggleKrigListe()" style="background:none;border:1px solid rgba(196,122,43,0.4);color:var(--accent);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.1em;padding:0.4rem 1.25rem;cursor:pointer;">${visAlle ? '\u25B2 VIS MINDRE' : '\u25BC SE MER (' + (data.length - 8) + ' til)'}</button></div>`;
       }
       return html;
     }
@@ -1496,12 +1490,12 @@
         const medals = ['🥇','🥈','🥉'];
         seierEl.innerHTML = seierListe.length
           ? seierListe.map(([navn, antall], i) =>
-              `<div style="margin-bottom:0.4rem;">${medals[i] || (i+1+'.')} ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--cream)">${navn}</strong> — ${antall} ${antall===1?'seier':'seiere'}</div>`
+              `<div style="margin-bottom:0.4rem;">${medals[i] || (i+1+'.')} ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--text)">${navn}</strong> — ${antall} ${antall===1?'seier':'seiere'}</div>`
             ).join('')
           : 'Ingen seiere ennå.';
         tapEl.innerHTML = tapListe.length
           ? tapListe.map(([navn, antall]) =>
-              `<div style="margin-bottom:0.4rem;">💀 ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--cream)">${navn}</strong> — ${antall} tap</div>`
+              `<div style="margin-bottom:0.4rem;">💀 ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--text)">${navn}</strong> — ${antall} tap</div>`
             ).join('')
           : 'Ingen tap ennå.';
       } catch(e) {
@@ -1519,7 +1513,7 @@
         const medals = ['🥇','🥈','🥉'];
         el.innerHTML = sortert.length
           ? sortert.map(([navn, antall], i) =>
-              `<div style="margin-bottom:0.4rem;">${medals[i]||(i+1+'.')} <strong style="color:var(--cream)">${navn}</strong> — ⭐ ${antall} ${antall===1?'gang':'ganger'}</div>`
+              `<div style="margin-bottom:0.4rem;">${medals[i]||(i+1+'.')} <strong style="color:var(--text)">${navn}</strong> — ⭐ ${antall} ${antall===1?'gang':'ganger'}</div>`
             ).join('')
           : 'Ingen MVP-data ennå.';
       } catch(e) { el.textContent = 'Feil: ' + e.message; }
@@ -1616,7 +1610,7 @@
             <div style="width:100%;">
               <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1.5rem;margin-bottom:1.25rem;">
                 <div>
-                  <div style="font-size:1.1rem;color:var(--cream);font-weight:600;">${e1} ${kamp.lag1}</div>
+                  <div style="font-size:1.1rem;color:var(--text);font-weight:600;">${e1} ${kamp.lag1}</div>
                   <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.25rem;">Utfordrer</div>
                 </div>
                 <div style="text-align:center;">
@@ -1624,7 +1618,7 @@
                   <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.2rem;">${dager}d igjen</div>
                 </div>
                 <div style="text-align:right;">
-                  <div style="font-size:1.1rem;color:var(--cream);font-weight:600;">${kamp.lag2} ${e2}</div>
+                  <div style="font-size:1.1rem;color:var(--text);font-weight:600;">${kamp.lag2} ${e2}</div>
                   <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.25rem;">Utfordrer</div>
                 </div>
               </div>
@@ -1647,7 +1641,7 @@
           kortEl.innerHTML = `
             <div style="width:100%;text-align:center;padding:1rem 0;">
               <div style="font-size:2rem;margin-bottom:0.5rem;">${BOLLE_EMOJIS_KRIG[tilfeldig1]} ⚔️ ${BOLLE_EMOJIS_KRIG[tilfeldig2]}</div>
-              <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--caramel);">Hvem møtes neste gang? Ingen vet ennå.</div>
+              <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--accent);">Hvem møtes neste gang? Ingen vet ennå.</div>
               <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.5rem;">Krig #${status.krigNr + 1} trekkes automatisk når pausen er over</div>
             </div>`;
         }
@@ -1686,11 +1680,11 @@
 
         mvpEl.innerHTML = topp3.map((s, i) => {
           const medals = ['🥇','🥈','🥉'];
-          return `<div style="margin-bottom:0.3rem;">${medals[i]} <strong style="color:var(--cream);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`;
+          return `<div style="margin-bottom:0.3rem;">${medals[i]} <strong style="color:var(--text);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`;
         }).join('') + `<div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.5rem;">Basert på siste scoreboard</div>`;
 
         rottenEl.innerHTML = bunn3.map(s =>
-          `<div style="margin-bottom:0.3rem;">💀 <strong style="color:var(--cream);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`
+          `<div style="margin-bottom:0.3rem;">💀 <strong style="color:var(--text);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`
         ).join('') + `<div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.5rem;">Basert på siste scoreboard</div>`;
 
     // ── Init ──
