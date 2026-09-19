@@ -1571,14 +1571,20 @@
           `<div style="margin-bottom:0.3rem;">💀 <strong style="color:var(--cream);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`
         ).join('') + `<div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.5rem;">Basert på siste scoreboard</div>`;
 
-    // ── Init ──
-    restoreAdminSession();
-    loadScoreboard();
-    loadKrigHistorikk();
-    loadKrigStatus().then(() => setTimeout(startNedtelling, 200));
-    loadRolleInnehavere();
-      } catch(e) { if(mvpEl) mvpEl.textContent = 'Kunne ikke laste.'; if(rottenEl) rottenEl.textContent = 'Kunne ikke laste.'; }
+      } catch(e) {
+        if (mvpEl) mvpEl.textContent = 'Kunne ikke laste.';
+        if (rottenEl) rottenEl.textContent = 'Kunne ikke laste.';
+      }
     }
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', () => {
+      restoreAdminSession();
+      loadScoreboard();
+      loadKrigHistorikk();
+      loadKrigStatus().then(() => setTimeout(startNedtelling, 200));
+      loadRolleInnehavere();
+    });
 
   </script>
 </body>
