@@ -1054,126 +1054,106 @@
   </div>
 
   <script>
+    // ─────────────────────────────────────────────
+    // NEW UI FUNCTIONS
+    // ─────────────────────────────────────────────
 
-    // ── Tab switching ──
+    const BOLLEKRIG_URL   = 'https://bollekrig-worker.marcus-aas-mekiassen.workers.dev';
+    const BOLLEKRIG_ADMIN = 'https://bollekrig-worker.marcus-aas-mekiassen.workers.dev';
+    const VAL_ADMIN       = 'https://val-stats-worker.marcus-aas-mekiassen.workers.dev';
+    const BOLLE_EMOJIS_KRIG = {
+      'Sjokoladebolle':'🍫','Bitcoinbolle':'🟡','Kanelbolle':'🥐',
+      'Berlinerbolle':'🍩','Vaniljebolle':'🤍','Tangzhongbolle':'🍞',
+      'Hvetebolle':'🌾','Ufobolle':'🛸'
+    };
+    let alleKrigResultater = [];
+    let visAlleKrig = false;
+
     function switchTab(tabName, btn) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      document.getElementById('tab-' + tabName).classList.add('active');
+      const panel = document.getElementById('tab-' + tabName);
+      if (panel) panel.classList.add('active');
       if (btn) btn.classList.add('active');
     }
 
-    // ── Collapse ──
-    function toggleCollapse(trigger) {
-      trigger.classList.toggle('open');
-      const content = trigger.nextElementSibling;
-      content.classList.toggle('open');
+    function toggleCollapse(btn) {
+      btn.classList.toggle('open');
+      const next = btn.nextElementSibling;
+      if (next) next.classList.toggle('open');
     }
 
-    // ── Bollekrig emojis ──
-    const BOLLE_EMOJIS_KRIG = {
-      'Sjokoladebolle': '🍫', 'Bitcoinbolle': '🟡', 'Kanelbolle': '🥐',
-      'Berlinerbolle': '🍩', 'Vaniljebolle': '🤍', 'Tangzhongbolle': '🍞',
-      'Hvetebolle': '🌾', 'Ufobolle': '🛸',
-    };
-
-    const BOLLEKRIG_URL  = 'https://bollekrig-worker.marcus-aas-mekiassen.workers.dev';
-    const BOLLEKRIG_ADMIN = 'https://bollekrig-worker.marcus-aas-mekiassen.workers.dev';
-    const VAL_ADMIN       = 'https://val-stats-worker.marcus-aas-mekiassen.workers.dev';
-
-    // ── Admin commands ──
-    async function adminCmd(worker, endpoint, params = '') {
-      const base = worker === 'bollekrig' ? BOLLEKRIG_ADMIN : VAL_ADMIN;
-      const url  = `${base}/${endpoint}${params ? '?' + params : ''}`;
-      const res  = document.getElementById('adminCmdResult');
-      res.style.display = 'block';
-      res.textContent = `↻ ${endpoint}...`;
-      try {
-        const r = await fetch(url);
-        const txt = await r.text();
-        res.textContent = txt;
-      } catch (e) {
-        res.textContent = `Feil: ${e.message}`;
-      }
-    }
-
-    async function adminForceKamp() {
-      const lag1 = document.getElementById('adminLag1').value;
-      const lag2 = document.getElementById('adminLag2').value;
-      if (!lag1 || !lag2) { alert('Velg begge lag!'); return; }
-      if (lag1 === lag2)  { alert('Lag 1 og lag 2 kan ikke være like!'); return; }
-      await adminCmd('bollekrig', 'force-kamp', `lag1=${encodeURIComponent(lag1)}&lag2=${encodeURIComponent(lag2)}`);
-    }
-
-    async function adminKorrigerWins() {
-      const bolle = document.getElementById('adminKorrigerBolle').value;
-      const wins  = document.getElementById('adminKorrigerWins').value;
-      if (!bolle || wins === '') { alert('Velg bolle og antall seiere!'); return; }
-      await adminCmd('bollekrig', 'korriger-wins', `bolle=${encodeURIComponent(bolle)}&wins=${wins}`);
-    }
-
-    // ── Status display helpers ──
     function showStatus(id, msg, type) {
       const el = document.getElementById(id);
       if (!el) return;
       el.textContent = msg;
-      el.className = 'status-msg show ' + (type || '');
       el.style.display = 'block';
+      el.style.color = type === 'ok' ? 'var(--green)' : type === 'err' ? 'var(--danger)' : 'var(--muted)';
       setTimeout(() => { el.style.display = 'none'; }, 4000);
     }
 
-    // ── Scoreboard renderer (new style) ──
     function renderScoreboardItem(s, rank, pil) {
-      const rankNavn   = (s.rank || 'Unranked').split(' ')[0];
-      const emoji      = RANK_EMOJIS[rankNavn] || '⬜';
-      const kdStr      = s.kd === '?' ? '—' : s.kd;
-      const wrStr      = s.winrate === '?' ? '—' : `${s.winrate}%`;
-      const agent      = s.topAgent === '?' ? '' : ` · ${s.topAgent}`;
-      const inactive   = s.erInaktiv ? ' sb-inactive' : '';
-      const sleepIcon  = s.erInaktiv ? ' 💤' : '';
+      const rankNavn  = (s.rank || 'Unranked').split(' ')[0];
+      const emoji     = RANK_EMOJIS[rankNavn] || '⬜';
+      const kdStr     = s.kd === '?' ? '—' : s.kd;
+      const wrStr     = s.winrate === '?' ? '—' : s.winrate + '%';
+      const agent     = (!s.topAgent || s.topAgent === '?') ? '' : ' · ' + s.topAgent;
+      const inactive  = s.erInaktiv ? ' sb-inactive' : '';
+      const sleepIcon = s.erInaktiv ? ' 💤' : '';
+      const medals    = ['🥇','🥈','🥉'];
+      const medal     = medals[rank-1] || '';
       let pilHtml = '';
-      if (pil === '🔼') pilHtml = '<span class="pill pill-up">↑</span>';
-      else if (pil === '🔽') pilHtml = '<span class="pill pill-down">↓</span>';
-      else if (pil === '🆕') pilHtml = '<span class="pill pill-new">new</span>';
-      const medal = MEDALS[rank - 1] || '';
-      return `<div class="sb-item${inactive}">
-        <div class="sb-rank">${medal || rank}</div>
-        <div class="sb-name">
-          ${s.riotName}${sleepIcon} ${pilHtml}
-          <small>${emoji} ${s.rank || 'Unranked'}${agent}</small>
-        </div>
-        <div class="sb-stats">K/D <strong>${kdStr}</strong><br>WR ${wrStr}</div>
-      </div>`;
+      if (pil === '🔼') pilHtml = ' <span class="pill pill-up">↑</span>';
+      else if (pil === '🔽') pilHtml = ' <span class="pill pill-down">↓</span>';
+      else if (pil === '🆕') pilHtml = ' <span class="pill pill-new">new</span>';
+      return '<div class="sb-item' + inactive + '">' +
+        '<div class="sb-rank">' + (medal || rank) + '</div>' +
+        '<div class="sb-name">' + s.riotName + sleepIcon + pilHtml +
+          '<small>' + emoji + ' ' + (s.rank || 'Unranked') + agent + '</small></div>' +
+        '<div class="sb-stats">K/D <strong>' + kdStr + '</strong><br>WR ' + wrStr + '</div>' +
+        '</div>';
     }
 
-    // ── Historikk renderer (new style) ──
-    let alleKrigResultater = [];
-    let visAlleKrig = false;
+    async function loadScoreboard() {
+      const el = document.getElementById('scoreboard');
+      if (!el) return;
+      try {
+        const res   = await fetch(WORKER_URL + '/scoreboard');
+        const stats = await res.json();
+        if (!stats || !stats.length) {
+          el.innerHTML = '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);padding:12px 0;">Ingen spillere.</div>';
+          return;
+        }
+        el.innerHTML = stats.map((s, i) => renderScoreboardItem(s, i+1, '')).join('');
+        const upd = document.getElementById('sb-updated');
+        if (upd) {
+          const now = new Date();
+          upd.textContent = 'Sist oppdatert: ' + now.toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'});
+        }
+      } catch(err) {
+        el.innerHTML = '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);">Feil: ' + err.message + '</div>';
+      }
+    }
 
     function byggKrigTabell(data, visAlle) {
       const rader = visAlle ? data : data.slice(0, 8);
       let html = rader.map(r => {
         const e1   = BOLLE_EMOJIS_KRIG[r.lag1] || '🍩';
         const e2   = r.lag2 ? (BOLLE_EMOJIS_KRIG[r.lag2] || '🍩') : '';
-        const dato = new Date(r.dato).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' });
-        const vinnernavn = r.uavgjort ? null : r.vinner;
-        const badgeClass = r.uavgjort ? 'draw' : 'win';
-        const badgeTekst = r.uavgjort ? 'Uavgjort' : `${BOLLE_EMOJIS_KRIG[r.vinner] || ''} ${r.vinner} vant`;
-        const teamsStr   = r.erBattleRoyale
-          ? 'Battle Royale'
-          : `${e1} ${r.lag1} vs ${e2} ${r.lag2 || ''}`;
-        const mvpStr = r.mvp ? ` · MVP: ${r.mvp.navn} ${r.mvp.score}p` : '';
-        return `<div class="hist-row">
-          <div class="hist-num">#${r.krigNr || '?'}<br><span style="color:var(--muted);font-size:0.55rem;">${dato}</span></div>
-          <div class="hist-teams">
-            <strong>${teamsStr}</strong>
-            <small>${r.score1}p vs ${r.score2}p${mvpStr}</small>
-          </div>
-          <div class="hist-badge ${badgeClass}">${badgeTekst}</div>
-        </div>`;
+        const dato = new Date(r.dato).toLocaleDateString('nb-NO', {day:'numeric',month:'short',year:'numeric'});
+        const badge = r.uavgjort
+          ? '<span class="hist-badge draw">Uavgjort</span>'
+          : '<span class="hist-badge win">'+(BOLLE_EMOJIS_KRIG[r.vinner]||'')+' '+(r.vinner||'')+' vant</span>';
+        const teams = r.erBattleRoyale ? 'Battle Royale'
+          : e1+' '+r.lag1+' vs '+e2+' '+(r.lag2||'');
+        const mvp = r.mvp ? ' · MVP: '+r.mvp.navn+' '+r.mvp.score+'p' : '';
+        return '<div class="hist-row">'+
+          '<div class="hist-num">#'+(r.krigNr||'?')+'<br><span style="color:var(--muted);font-size:0.55rem;">'+dato+'</span></div>'+
+          '<div class="hist-teams"><strong>'+teams+'</strong><small>'+r.score1+'p vs '+r.score2+'p'+mvp+'</small></div>'+
+          badge+'</div>';
       }).join('');
       if (data.length > 8) {
-        html += `<button class="show-more" onclick="toggleKrigListe()">${visAlle ? '↑ Vis færre' : `↓ Vis ${data.length - 8} til`}</button>`;
+        html += '<button class="show-more" onclick="toggleKrigListe()">'+(visAlle?'↑ Vis færre':'↓ Vis '+(data.length-8)+' til')+'</button>';
       }
       return html;
     }
@@ -1183,7 +1163,41 @@
       document.getElementById('krig-liste').innerHTML = byggKrigTabell(alleKrigResultater, visAlleKrig);
     }
 
-    // ── Nedtelling ──
+    function toggleAdmin() {
+      const panel = document.getElementById('adminPanel');
+      panel.style.display = (panel.style.display === 'none' || !panel.style.display) ? 'block' : 'none';
+    }
+
+    async function adminCmd(worker, endpoint, params) {
+      const base = worker === 'bollekrig' ? BOLLEKRIG_ADMIN : VAL_ADMIN;
+      const url  = base + '/' + endpoint + (params ? '?' + params : '');
+      const res  = document.getElementById('adminCmdResult');
+      res.style.display = 'block';
+      res.textContent = '↻ ' + endpoint + '...';
+      try {
+        const r   = await fetch(url);
+        const txt = await r.text();
+        res.textContent = txt;
+      } catch(e) {
+        res.textContent = 'Feil: ' + e.message;
+      }
+    }
+
+    async function adminForceKamp() {
+      const lag1 = document.getElementById('adminLag1').value;
+      const lag2 = document.getElementById('adminLag2').value;
+      if (!lag1 || !lag2) { alert('Velg begge lag!'); return; }
+      if (lag1 === lag2)  { alert('Kan ikke være like!'); return; }
+      await adminCmd('bollekrig','force-kamp','lag1='+encodeURIComponent(lag1)+'&lag2='+encodeURIComponent(lag2));
+    }
+
+    async function adminKorrigerWins() {
+      const bolle = document.getElementById('adminKorrigerBolle').value;
+      const wins  = document.getElementById('adminKorrigerWins').value;
+      if (!bolle || wins === '') { alert('Velg bolle og antall!'); return; }
+      await adminCmd('bollekrig','korriger-wins','bolle='+encodeURIComponent(bolle)+'&wins='+wins);
+    }
+
     function startNedtelling() {
       function oppdater() {
         const el = document.getElementById('krig-nedtelling');
@@ -1196,12 +1210,15 @@
         const t = String(Math.floor((diff % 86400000) / 3600000)).padStart(2,'0');
         const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
         const s = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
-        el.textContent = d > 0 ? `${d}d ${t}t ${m}m ${s}s` : `${t}t ${m}m ${s}s`;
+        el.textContent = d > 0 ? d+'d '+t+'t '+m+'m '+s+'s' : t+'t '+m+'m '+s+'s';
       }
       oppdater();
       setInterval(oppdater, 1000);
     }
 
+    // ─────────────────────────────────────────────
+    // ORIGINAL JS (cleaned of duplicates)
+    // ─────────────────────────────────────────────
 
     const WORKER_URL = 'https://val-stats-worker.marcus-aas-mekiassen.workers.dev';
     const ADMIN_PASSWORD = 'Fuksa6Svaga36';
@@ -1215,10 +1232,6 @@
 
 
     // ── Admin ─────────────────────────────────────────────
-    function toggleAdmin() {
-      const panel = document.getElementById('adminPanel');
-      panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
-    }
 
     function adminLogin() {
       const password = document.getElementById('adminPassword').value;
@@ -1228,7 +1241,7 @@
       }
 
       sessionStorage.setItem('valStatsAdmin', 'true');
-      document.getElementById('adminLoginPanel').style.display = 'none';
+      document.getElementById('adminLogin').style.display = 'none';
       document.getElementById('adminContent').style.display = 'block';
       setAdminStatus('success', '✅ Du er logget inn.');
       loadAdminPlayers();
@@ -1237,7 +1250,7 @@
     function adminLogout() {
       sessionStorage.removeItem('valStatsAdmin');
       document.getElementById('adminPassword').value = '';
-      document.getElementById('adminLoginPanel').style.display = 'block';
+      document.getElementById('adminLogin').style.display = 'block';
       document.getElementById('adminContent').style.display = 'none';
       document.getElementById('adminPlayers').innerHTML = '<div class="sb-loading">🍩 Laster spillere...</div>';
       setAdminActionStatus('', '');
@@ -1246,7 +1259,7 @@
 
     function restoreAdminSession() {
       if (sessionStorage.getItem('valStatsAdmin') === 'true') {
-        document.getElementById('adminLoginPanel').style.display = 'none';
+        document.getElementById('adminLogin').style.display = 'none';
         document.getElementById('adminContent').style.display = 'block';
         loadAdminPlayers();
       }
@@ -1369,36 +1382,6 @@
     }
 
     // ── Scoreboard ────────────────────────────────────────
-    async function loadScoreboard() {
-      const el = document.getElementById('scoreboard');
-      try {
-        const res   = await fetch(`${WORKER_URL}/scoreboard`);
-        const stats = await res.json();
-        if (!stats.length) {
-          el.innerHTML = '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);padding:12px 0;">Ingen spillere registrert.</div>';
-          return;
-        }
-
-        // Hent forrige rangering
-        const prevRaw = null; // vil bygge opp over tid
-        const prevRanking = {};
-
-        let html = '';
-        stats.forEach((s, i) => {
-          const pil = getPil(s.discordId, i, prevRanking);
-          html += renderScoreboardItem(s, i + 1, pil);
-        });
-        el.innerHTML = html;
-
-        const updated = document.getElementById('sb-updated');
-        if (updated) {
-          const now = new Date();
-          updated.textContent = `Sist oppdatert: ${now.toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' })}`;
-        }
-      } catch (err) {
-        el.innerHTML = `<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);">Feil: ${err.message}</div>`;
-      }
-    }
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
@@ -1409,58 +1392,8 @@
     restoreAdminSession();
     loadScoreboard();
 
-    const BOLLEKRIG_URL = 'https://bollekrig-worker.marcus-aas-mekiassen.workers.dev';
-
-    const BOLLE_EMOJIS_KRIG = {
-      'Sjokoladebolle': '🍫', 'Bitcoinbolle': '🟡', 'Kanelbolle': '🥐',
-      'Berlinerbolle': '🍩', 'Vaniljebolle': '🤍', 'Tangzhongbolle': '🍞',
-      'Hvetebolle': '🌾', 'Ufobolle': '🛸',
-    };
-
     async function loadKrigHistorikk() {
       await Promise.all([loadKrigListe(), loadBolleStats(), loadMvpStats()]);
-    }
-
-    let alleKrigResultater = [];
-
-    function byggKrigTabell(data, visAlle) {
-      const rader = visAlle ? data : data.slice(0, 8);
-      let html = '<div style="display:flex;flex-direction:column;gap:0.4rem;">';
-      for (const r of rader) {
-        const e1 = BOLLE_EMOJIS_KRIG[r.lag1] || '\u{1F369}';
-        const e2 = BOLLE_EMOJIS_KRIG[r.lag2] || '\u{1F369}';
-        const dato = new Date(r.dato).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' });
-        const lag1Vant = !r.uavgjort && r.vinner === r.lag1;
-        const lag2Vant = !r.uavgjort && r.vinner === r.lag2;
-        const lag1Color = lag1Vant ? '#5cb85c' : r.uavgjort ? 'var(--cream)' : 'var(--muted)';
-        const lag2Color = lag2Vant ? '#5cb85c' : r.uavgjort ? 'var(--cream)' : 'var(--muted)';
-        const lag1Bold = lag1Vant ? 'font-weight:600;' : '';
-        const lag2Bold = lag2Vant ? 'font-weight:600;' : '';
-        const badge = r.uavgjort
-          ? `<span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);">UAVGJORT</span>`
-          : `<span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:#5cb85c;">\u{1F3C6} VINNER</span>`;
-        const mvpTekst = r.mvp
-          ? `<span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);">\u2B50 ${r.mvp.navn} ${r.mvp.score}p</span>`
-          : '';
-        html += `<div style="background:rgba(0,0,0,0.15);border:1px solid rgba(196,122,43,0.1);padding:0.5rem 0.875rem;display:grid;grid-template-columns:auto 1fr auto 1fr auto;align-items:center;gap:0.5rem;">
-          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--accent);white-space:nowrap;">#${r.krigNr||'?'}</span>
-          <div style="font-size:0.82rem;color:${lag1Color};${lag1Bold}">${e1} ${r.lag1} <span style="font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:normal;color:var(--accent);">${r.score1}p</span></div>
-          <div style="text-align:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.4);padding:0 0.25rem;">vs</div>
-          <div style="font-size:0.82rem;color:${lag2Color};${lag2Bold}">${r.lag2} ${e2} <span style="font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:normal;color:var(--accent);">${r.score2}p</span></div>
-          <div style="text-align:right;white-space:nowrap;">${badge}${mvpTekst ? ' &nbsp;' + mvpTekst : ''}<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(156,122,90,0.4);margin-left:0.5rem;">${dato}</span></div>
-        </div>`;
-      }
-      html += '</div>';
-      if (data.length > 8) {
-        html += `<div style="margin-top:0.75rem;text-align:center;"><button onclick="toggleKrigListe()" style="background:none;border:1px solid rgba(196,122,43,0.4);color:var(--accent);font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.1em;padding:0.4rem 1.25rem;cursor:pointer;">${visAlle ? '\u25B2 VIS MINDRE' : '\u25BC SE MER (' + (data.length - 8) + ' til)'}</button></div>`;
-      }
-      return html;
-    }
-
-    let visAlleKrig = false;
-    function toggleKrigListe() {
-      visAlleKrig = !visAlleKrig;
-      document.getElementById('krig-liste').innerHTML = byggKrigTabell(alleKrigResultater, visAlleKrig);
     }
 
     async function loadKrigListe() {
@@ -1490,12 +1423,12 @@
         const medals = ['🥇','🥈','🥉'];
         seierEl.innerHTML = seierListe.length
           ? seierListe.map(([navn, antall], i) =>
-              `<div style="margin-bottom:0.4rem;">${medals[i] || (i+1+'.')} ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--text)">${navn}</strong> — ${antall} ${antall===1?'seier':'seiere'}</div>`
+              `<div style="margin-bottom:0.4rem;">${medals[i] || (i+1+'.')} ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--cream)">${navn}</strong> — ${antall} ${antall===1?'seier':'seiere'}</div>`
             ).join('')
           : 'Ingen seiere ennå.';
         tapEl.innerHTML = tapListe.length
           ? tapListe.map(([navn, antall]) =>
-              `<div style="margin-bottom:0.4rem;">💀 ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--text)">${navn}</strong> — ${antall} tap</div>`
+              `<div style="margin-bottom:0.4rem;">💀 ${BOLLE_EMOJIS_KRIG[navn]||'🍩'} <strong style="color:var(--cream)">${navn}</strong> — ${antall} tap</div>`
             ).join('')
           : 'Ingen tap ennå.';
       } catch(e) {
@@ -1513,66 +1446,13 @@
         const medals = ['🥇','🥈','🥉'];
         el.innerHTML = sortert.length
           ? sortert.map(([navn, antall], i) =>
-              `<div style="margin-bottom:0.4rem;">${medals[i]||(i+1+'.')} <strong style="color:var(--text)">${navn}</strong> — ⭐ ${antall} ${antall===1?'gang':'ganger'}</div>`
+              `<div style="margin-bottom:0.4rem;">${medals[i]||(i+1+'.')} <strong style="color:var(--cream)">${navn}</strong> — ⭐ ${antall} ${antall===1?'gang':'ganger'}</div>`
             ).join('')
           : 'Ingen MVP-data ennå.';
       } catch(e) { el.textContent = 'Feil: ' + e.message; }
     }
 
     loadKrigHistorikk();
-
-    const BOLLEKRIG_ADMIN = 'https://bollekrig-worker.marcus-aas-mekiassen.workers.dev';
-    const VAL_ADMIN       = 'https://val-stats-worker.marcus-aas-mekiassen.workers.dev';
-
-    async function adminCmd(worker, endpoint, params = '') {
-      const base = worker === 'bollekrig' ? BOLLEKRIG_ADMIN : VAL_ADMIN;
-      const url  = `${base}/${endpoint}${params ? '?' + params : ''}`;
-      const res  = document.getElementById('adminCmdResult');
-      res.style.display = 'block';
-      res.textContent = `Kjører ${endpoint}...`;
-      try {
-        const r = await fetch(url);
-        const txt = await r.text();
-        res.textContent = txt;
-      } catch (e) {
-        res.textContent = `Feil: ${e.message}`;
-      }
-    }
-
-    async function adminForceKamp() {
-      const lag1 = document.getElementById('adminLag1').value;
-      const lag2 = document.getElementById('adminLag2').value;
-      if (!lag1 || !lag2) { alert('Velg begge lag!'); return; }
-      if (lag1 === lag2) { alert('Lag 1 og lag 2 kan ikke være samme bolle!'); return; }
-      await adminCmd('bollekrig', 'force-kamp', `lag1=${encodeURIComponent(lag1)}&lag2=${encodeURIComponent(lag2)}`);
-    }
-
-    async function adminKorrigerWins() {
-      const bolle = document.getElementById('adminKorrigerBolle').value;
-      const wins  = document.getElementById('adminKorrigerWins').value;
-      if (!bolle || wins === '') { alert('Velg bolle og antall seiere!'); return; }
-      await adminCmd('bollekrig', 'korriger-wins', `bolle=${encodeURIComponent(bolle)}&wins=${wins}`);
-    }
-
-    function startNedtelling() {
-      function oppdater() {
-        const el = document.getElementById('krig-nedtelling');
-        if (!el) return;
-        const slutt = parseInt(el.dataset.slutt);
-        if (!slutt || isNaN(slutt)) return;
-        const diff = slutt - Date.now();
-        if (diff <= 0) { el.textContent = 'Ferdig'; return; }
-        const d = Math.floor(diff / 86400000);
-        const t = Math.floor((diff % 86400000) / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
-        el.textContent = d > 0
-          ? `${d}d ${String(t).padStart(2,'0')}t ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`
-          : `${String(t).padStart(2,'0')}t ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
-      }
-      oppdater();
-      setInterval(oppdater, 1000);
-    }
     loadKrigStatus().then(() => setTimeout(startNedtelling, 100));
     loadRolleInnehavere();
 
@@ -1610,7 +1490,7 @@
             <div style="width:100%;">
               <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:1.5rem;margin-bottom:1.25rem;">
                 <div>
-                  <div style="font-size:1.1rem;color:var(--text);font-weight:600;">${e1} ${kamp.lag1}</div>
+                  <div style="font-size:1.1rem;color:var(--cream);font-weight:600;">${e1} ${kamp.lag1}</div>
                   <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.25rem;">Utfordrer</div>
                 </div>
                 <div style="text-align:center;">
@@ -1618,7 +1498,7 @@
                   <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.2rem;">${dager}d igjen</div>
                 </div>
                 <div style="text-align:right;">
-                  <div style="font-size:1.1rem;color:var(--text);font-weight:600;">${kamp.lag2} ${e2}</div>
+                  <div style="font-size:1.1rem;color:var(--cream);font-weight:600;">${kamp.lag2} ${e2}</div>
                   <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.25rem;">Utfordrer</div>
                 </div>
               </div>
@@ -1641,7 +1521,7 @@
           kortEl.innerHTML = `
             <div style="width:100%;text-align:center;padding:1rem 0;">
               <div style="font-size:2rem;margin-bottom:0.5rem;">${BOLLE_EMOJIS_KRIG[tilfeldig1]} ⚔️ ${BOLLE_EMOJIS_KRIG[tilfeldig2]}</div>
-              <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--accent);">Hvem møtes neste gang? Ingen vet ennå.</div>
+              <div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--caramel);">Hvem møtes neste gang? Ingen vet ennå.</div>
               <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--muted);margin-top:0.5rem;">Krig #${status.krigNr + 1} trekkes automatisk når pausen er over</div>
             </div>`;
         }
@@ -1680,19 +1560,22 @@
 
         mvpEl.innerHTML = topp3.map((s, i) => {
           const medals = ['🥇','🥈','🥉'];
-          return `<div style="margin-bottom:0.3rem;">${medals[i]} <strong style="color:var(--text);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`;
+          return `<div style="margin-bottom:0.3rem;">${medals[i]} <strong style="color:var(--cream);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`;
         }).join('') + `<div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.5rem;">Basert på siste scoreboard</div>`;
 
         rottenEl.innerHTML = bunn3.map(s =>
-          `<div style="margin-bottom:0.3rem;">💀 <strong style="color:var(--text);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`
+          `<div style="margin-bottom:0.3rem;">💀 <strong style="color:var(--cream);">${s.riotName}</strong> <span style="font-family:'DM Mono',monospace;font-size:0.65rem;">K/D ${s.kd}</span></div>`
         ).join('') + `<div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(156,122,90,0.5);margin-top:0.5rem;">Basert på siste scoreboard</div>`;
 
     // ── Init ──
     restoreAdminSession();
     loadScoreboard();
     loadKrigHistorikk();
-    loadKrigStatus().then(() => setTimeout(startNedtelling, 100));
+    loadKrigStatus().then(() => setTimeout(startNedtelling, 200));
     loadRolleInnehavere();
+      } catch(e) { mvpEl.textContent = "Feil."; rottenEl.textContent = "Feil."; }
+    }
+
   </script>
 </body>
 </html>
