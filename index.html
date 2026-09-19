@@ -1241,7 +1241,7 @@
       }
 
       sessionStorage.setItem('valStatsAdmin', 'true');
-      document.getElementById('adminLogin').style.display = 'none';
+      document.getElementById('adminLoginPanel').style.display = 'none';
       document.getElementById('adminContent').style.display = 'block';
       setAdminStatus('success', '✅ Du er logget inn.');
       loadAdminPlayers();
@@ -1250,7 +1250,7 @@
     function adminLogout() {
       sessionStorage.removeItem('valStatsAdmin');
       document.getElementById('adminPassword').value = '';
-      document.getElementById('adminLogin').style.display = 'block';
+      document.getElementById('adminLoginPanel').style.display = 'block';
       document.getElementById('adminContent').style.display = 'none';
       document.getElementById('adminPlayers').innerHTML = '<div class="sb-loading">🍩 Laster spillere...</div>';
       setAdminActionStatus('', '');
@@ -1259,7 +1259,7 @@
 
     function restoreAdminSession() {
       if (sessionStorage.getItem('valStatsAdmin') === 'true') {
-        document.getElementById('adminLogin').style.display = 'none';
+        document.getElementById('adminLoginPanel').style.display = 'none';
         document.getElementById('adminContent').style.display = 'block';
         loadAdminPlayers();
       }
