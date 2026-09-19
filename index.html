@@ -1578,13 +1578,13 @@
     }
 
     // ── Init ──
-    document.addEventListener('DOMContentLoaded', () => {
-      restoreAdminSession();
-      loadScoreboard();
-      loadKrigHistorikk();
-      loadKrigStatus().then(() => setTimeout(startNedtelling, 200));
-      loadRolleInnehavere();
-    });
+    restoreAdminSession();
+    loadScoreboard();
+    loadKrigHistorikk();
+    if (typeof loadKrigStatus === 'function') {
+      loadKrigStatus().then(() => setTimeout(startNedtelling, 200)).catch(() => {});
+    }
+    loadRolleInnehavere();
 
   </script>
 </body>
