@@ -1267,12 +1267,14 @@
 
     function setAdminStatus(type, msg) {
       const el = document.getElementById('adminStatus');
+      if (!el) return;
       el.className = msg ? `status ${type}` : 'status';
       el.textContent = msg;
     }
 
     function setAdminActionStatus(type, msg) {
       const el = document.getElementById('adminActionStatus');
+      if (!el) return;
       el.className = msg ? `status ${type}` : 'status';
       el.textContent = msg;
     }
@@ -1303,12 +1305,16 @@
         }
 
         el.innerHTML = players.map(player => `
-          <div class="admin-row">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
             <div>
-              <div class="admin-player-name">${escapeHtml(player.label)}</div>
-              <div class="admin-player-id">Discord ID: ${escapeHtml(player.discordId)}</div>
+              <div style="font-size:0.8rem;font-weight:500;">${escapeHtml(player.label)}</div>
+              <div style="font-family:var(--mono);font-size:0.58rem;color:var(--muted);margin-top:2px;">${escapeHtml(player.discordId)}</div>
             </div>
-            <button class="delete-btn" data-discord-id="${escapeAttr(player.discordId)}" data-label="${escapeAttr(player.label)}" onclick="deletePlayer(this.dataset.discordId, this.dataset.label)">Slett</button>
+            <button onclick="deletePlayer('${escapeAttr(player.discordId)}', '${escapeAttr(player.label)}')"
+              style="background:none;border:1px solid rgba(224,85,85,0.25);color:var(--danger);font-family:var(--mono);font-size:0.58rem;padding:4px 10px;cursor:pointer;letter-spacing:0.05em;"
+              onmouseover="this.style.background='rgba(224,85,85,0.1)'" onmouseout="this.style.background='none'">
+              Slett
+            </button>
           </div>
         `).join('');
       } catch (err) {
@@ -1318,18 +1324,43 @@
     }
 
     async function deletePlayer(discordId, label) {
-      if (!confirm(`Slette ${label}?`)) return;
-      setAdminActionStatus('loading', '🍩 Sletter spiller...');
+      // Show inline confirm
+      const existing = document.getElementById('deleteConfirm');
+      if (existing) existing.remove();
+
+      const confirm_div = document.createElement('div');
+      confirm_div.id = 'deleteConfirm';
+      confirm_div.style.cssText = 'background:#1a0a0a;border:1px solid rgba(224,85,85,0.4);padding:12px 14px;margin-bottom:8px;';
+      confirm_div.innerHTML = `
+        <div style="font-family:var(--mono);font-size:0.65rem;color:var(--danger);margin-bottom:8px;">Slette <strong>${escapeHtml(label)}</strong>?</div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="confirmDelete('${escapeAttr(discordId)}','${escapeAttr(label)}')"
+            style="background:var(--danger);color:#fff;border:none;font-family:var(--mono);font-size:0.62rem;padding:5px 12px;cursor:pointer;letter-spacing:0.05em;">
+            Ja, slett
+          </button>
+          <button onclick="document.getElementById('deleteConfirm').remove()"
+            style="background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:0.62rem;padding:5px 12px;cursor:pointer;">
+            Avbryt
+          </button>
+        </div>`;
+
+      const playersEl = document.getElementById('adminPlayers');
+      playersEl.prepend(confirm_div);
+    }
+
+    async function confirmDelete(discordId, label) {
+      const confirm_div = document.getElementById('deleteConfirm');
+      if (confirm_div) confirm_div.remove();
+
+      setAdminActionStatus('loading', 'Sletter spiller...');
 
       try {
-        const res = await fetch(`${WORKER_URL}/slett?discord=${encodeURIComponent(discordId)}`);
+        const res  = await fetch(`${WORKER_URL}/slett?discord=${encodeURIComponent(discordId)}`);
         const text = await res.text();
         if (!res.ok) throw new Error(text || 'Kunne ikke slette spiller.');
-
-        setAdminActionStatus('success', `✅ ${text}`);
+        setAdminActionStatus('ok', `${label} er slettet.`);
         await loadAdminPlayers();
-        await loadScoreboard();
-      } catch (err) {
+      } catch(err) {
         setAdminActionStatus('error', `❌ ${err.message}`);
       }
     }
