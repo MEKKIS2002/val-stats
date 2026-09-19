@@ -49,8 +49,8 @@
     }
     .bg-bun {
       position: absolute;
-      font-size: clamp(1.5rem, 3vw, 2.5rem);
-      opacity: 0.04;
+      font-size: clamp(3rem, 6vw, 5rem);
+      opacity: 0.045;
       animation: drift var(--dur, 9s) ease-in-out var(--delay, 0s) infinite alternate;
       filter: blur(1px);
     }
@@ -1393,7 +1393,9 @@
     loadScoreboard();
 
     async function loadKrigHistorikk() {
-      await Promise.all([loadKrigListe(), loadBolleStats(), loadMvpStats()]);
+      try { await loadKrigListe(); } catch(e) { const el = document.getElementById('krig-liste'); if(el) el.textContent = 'Kunne ikke laste.'; }
+      try { await loadBolleStats(); } catch(e) {}
+      try { await loadMvpStats(); } catch(e) { const el = document.getElementById('mvp-stats'); if(el) el.textContent = 'Kunne ikke laste.'; }
     }
 
     async function loadKrigListe() {
@@ -1526,7 +1528,9 @@
             </div>`;
         }
       } catch(e) {
-        kortEl.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--muted);">Kunne ikke hente krigsstatus.</div>`;
+        if (tittelEl) tittelEl.innerHTML = 'BOLLEKRIGEN';
+        if (subEl) subEl.textContent = 'Kunne ikke hente status.';
+        if (kortEl) kortEl.innerHTML = '<div style="font-family:var(--mono);font-size:0.7rem;color:var(--muted);">Sjekk at bollekrig-workeren er oppe.</div>';
       }
     }
 
@@ -1573,7 +1577,7 @@
     loadKrigHistorikk();
     loadKrigStatus().then(() => setTimeout(startNedtelling, 200));
     loadRolleInnehavere();
-      } catch(e) { mvpEl.textContent = "Feil."; rottenEl.textContent = "Feil."; }
+      } catch(e) { if(mvpEl) mvpEl.textContent = 'Kunne ikke laste.'; if(rottenEl) rottenEl.textContent = 'Kunne ikke laste.'; }
     }
 
   </script>
