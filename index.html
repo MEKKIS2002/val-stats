@@ -1956,6 +1956,72 @@
       return streaks;
     }
 
+    // ── Rename player ──
+    function openRenamePlayer(discordId, currentLabel) {
+      // Close any other open rename panels
+      document.querySelectorAll('[id^="rename-"]').forEach(el => {
+        if (el.id !== 'rename-' + discordId) el.style.display = 'none';
+      });
+
+      const panel = document.getElementById('rename-' + discordId);
+      if (!panel) return;
+
+      if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+        return;
+      }
+
+      const parts = currentLabel.split('#');
+      const currentName = parts[0] || '';
+      const currentTag  = parts[1] || '';
+
+      panel.innerHTML =
+        '<div style="display:grid;grid-template-columns:1fr auto 80px;gap:0;margin-bottom:4px;">' +
+          '<input id="rename-name-' + discordId + '" type="text" value="' + escapeHtml(currentName) + '" placeholder="Nytt navn" autocomplete="new-password" ' +
+            'style="background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:6px 8px;font-family:var(--mono);font-size:0.65rem;outline:none;">' +
+          '<div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-left:none;color:var(--muted);font-family:var(--mono);font-size:0.65rem;padding:6px 6px;display:flex;align-items:center;">#</div>' +
+          '<input id="rename-tag-' + discordId + '" type="text" value="' + escapeHtml(currentTag) + '" placeholder="TAG" autocomplete="new-password" ' +
+            'style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-left:none;color:var(--text);padding:6px 8px;font-family:var(--mono);font-size:0.65rem;outline:none;">' +
+        '</div>' +
+        '<div style="display:flex;gap:4px;">' +
+          '<button id="rename-save-' + discordId + '" ' +
+            'style="background:var(--accent);color:var(--bg);border:none;font-family:var(--mono);font-size:0.6rem;padding:5px 12px;cursor:pointer;letter-spacing:0.05em;">' +
+            'Lagre' +
+          '</button>' +
+          '<button id="rename-cancel-' + discordId + '" ' +
+            'style="background:none;border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:0.6rem;padding:5px 10px;cursor:pointer;">' +
+            'Avbryt' +
+          '</button>' +
+        '</div>';
+
+      panel.style.display = 'block';
+      document.getElementById('rename-name-' + discordId).focus();
+
+      // Attach event listeners (avoids inline onclick quoting issues)
+      document.getElementById('rename-save-' + discordId).onclick = () => confirmRename(discordId);
+      document.getElementById('rename-cancel-' + discordId).onclick = () => { panel.style.display = 'none'; };
+    }
+
+    async function confirmRename(discordId) {
+      const nameEl = document.getElementById('rename-name-' + discordId);
+      const tagEl  = document.getElementById('rename-tag-' + discordId);
+      if (!nameEl || !tagEl) return;
+      const newName = nameEl.value.trim();
+      const newTag  = tagEl.value.trim();
+      if (!newName || !newTag) { alert('Fyll inn nytt navn og tag!'); return; }
+
+      setAdminActionStatus('loading', 'Oppdaterer...');
+      try {
+        const res = await fetch(`${WORKER_URL}/oppdater?discord=${encodeURIComponent(discordId)}&riot=${encodeURIComponent(newName)}&tag=${encodeURIComponent(newTag)}`);
+        const txt = await res.text();
+        if (!res.ok) throw new Error(txt);
+        setAdminActionStatus('ok', txt);
+        await loadAdminPlayers();
+      } catch(err) {
+        setAdminActionStatus('error', '❌ ' + err.message);
+      }
+    }
+
     // ── Init ──
     restoreAdminSession();
     loadScoreboard();
